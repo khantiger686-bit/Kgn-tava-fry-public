@@ -1,31 +1,175 @@
 import 'package:flutter/material.dart';
-void main()=>runApp(KGNApp());
-class KGNApp extends StatelessWidget{
-@override Widget build(BuildContext context){return MaterialApp(debugShowCheckedModeBanner:false,title:'KGN TAWA FRY',theme:ThemeData(primarySwatch:Colors.red),home:TableScreen());}
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() => runApp(KGNApp());
+
+class KGNApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'KGN TAWA FRY',
+      theme: ThemeData(primarySwatch: Colors.deepOrange, useMaterial3: true),
+      home: MainScreen(),
+    );
+  }
 }
-class MenuItem{String name;double price;bool isVeg;MenuItem(this.name,this.price,this.isVeg);}
-class OrderItem{MenuItem item;int qty;OrderItem(this.item,this.qty);}
-class TableData{int id;bool isBusy;List<OrderItem> orders;TableData(this.id,{this.isBusy=false,List<OrderItem>? orders}):orders=orders??[];double get total=>orders.fold(0,(s,o)=>s+o.item.price*o.qty);}
-List<MenuItem> menu=[MenuItem("Chicken Tawa Fry",250,false),MenuItem("Chicken Tandoori",300,false),MenuItem("Egg Tawa Fry",150,false),MenuItem("Chicken Biryani",200,false),MenuItem("Veg Pulao",120,true),MenuItem("Butter Naan",30,true),MenuItem("Cold Drink",40,true),];
-List<TableData> tables=List.generate(6,(i)=>TableData(i+1));
-class TableScreen extends StatefulWidget{@override _TableScreenState createState()=>_TableScreenState();}
-class _TableScreenState extends State<TableScreen>{
-@override Widget build(BuildContext context){
-return Scaffold(appBar:AppBar(backgroundColor:Color(0xFFD32F2F),title:Text("KGN TAWA FRY",style:TextStyle(fontWeight:FontWeight.bold,color:Colors.white)),centerTitle:true),
-body:Column(children:[
-Container(width:double.infinity,color:Color(0xFFFFF8E1),padding:EdgeInsets.all(12),child:Text("6 Tables - Green=Free, Red=Busy",textAlign:TextAlign.center,style:TextStyle(fontWeight:FontWeight.w600))),
-Expanded(child:GridView.builder(padding:EdgeInsets.all(16),gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,childAspectRatio:1.2,crossAxisSpacing:16,mainAxisSpacing:16),itemCount:tables.length,itemBuilder:(c,i){var t=tables[i];return GestureDetector(onTap:()async{await Navigator.push(context,MaterialPageRoute(builder:(_)=>OrderScreen(table:t)));setState((){});},child:Container(decoration:BoxDecoration(color:t.isBusy?Color(0xFFFFCDD2):Color(0xFFC8E6C9),borderRadius:BorderRadius.circular(16),border:Border.all(color:t.isBusy?Colors.red:Colors.green,width:2)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(Icons.table_restaurant,size:40,color:t.isBusy?Colors.red:Colors.green),SizedBox(height:8),Text("TABLE ${t.id}",style:TextStyle(fontSize:18,fontWeight:FontWeight.bold)),Text(t.isBusy?"BUSY - Rs.${t.total.toInt()}":"FREE",style:TextStyle(color:t.isBusy?Colors.red[800]:Colors.green[800])),if(t.isBusy)Text("${t.orders.length} items",style:TextStyle(fontSize:12))])));}),),
-Container(padding:EdgeInsets.all(12),color:Colors.black87,child:Row(mainAxisAlignment:MainAxisAlignment.spaceAround,children:[Text("Today: Rs.${tables.fold(0.0,(s,t)=>s+t.total).toInt()}",style:TextStyle(color:Colors.white,fontWeight:FontWeight.bold)),Text("Busy: ${tables.where((t)=>t.isBusy).length}/6",style:TextStyle(color:Colors.white)),]),)
-]),);
+
+class MenuItem {
+  String name; String category; double price; String variant;
+  MenuItem({required this.name, required this.category, required this.price, this.variant = ''});
+  Map toJson() => {'name': name, 'category': category, 'price': price, 'variant': variant};
+  factory MenuItem.fromJson(Map j) => MenuItem(name: j['name'], category: j['category'], price: j['price'].toDouble(), variant: j['variant']??'');
 }
+class CartItem { MenuItem item; int qty; CartItem(this.item, this.qty); }
+
+class MainScreen extends StatefulWidget {
+  @override
+  _MainScreenState createState() => _MainScreenState();
 }
-class OrderScreen extends StatefulWidget{final TableData table;OrderScreen({required this.table});@override _OrderScreenState createState()=>_OrderScreenState();}
-class _OrderScreenState extends State<OrderScreen>{
-void addItem(MenuItem m){setState((){widget.table.isBusy=true;var ex=widget.table.orders.where((e)=>e.item.name==m.name);if(ex.isNotEmpty)ex.first.qty++;else widget.table.orders.add(OrderItem(m,1));});}
-@override Widget build(BuildContext context){
-return Scaffold(appBar:AppBar(backgroundColor:Color(0xFFD32F2F),title:Text("TABLE ${widget.table.id} - Rs.${widget.table.total.toInt()}",style:TextStyle(color:Colors.white)),iconTheme:IconThemeData(color:Colors.white)),
-body:Column(children:[
-Expanded(child:ListView.builder(itemCount:menu.length,itemBuilder:(c,i){var m=menu[i];return Card(margin:EdgeInsets.symmetric(horizontal:8,vertical:4),child:ListTile(leading:Icon(m.isVeg?Icons.eco:Icons.restaurant,color:m.isVeg?Colors.green:Colors.red),title:Text(m.name,style:TextStyle(fontWeight:FontWeight.bold)),subtitle:Text("Rs. ${m.price}"),trailing:ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Color(0xFFD32F2F),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20))),onPressed:()=>addItem(m),child:Text("ADD",style:TextStyle(color:Colors.white))),));})),
-if(widget.table.orders.isNotEmpty)Container(padding:EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,boxShadow:[BoxShadow(color:Colors.black26,blurRadius:10)]),child:Column(children:[...widget.table.orders.map((o)=>Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text("${o.item.name} x${o.qty}"),Row(children:[Text("Rs.${(o.item.price*o.qty).toInt()} "),GestureDetector(onTap:(){setState((){o.qty--;if(o.qty==0)widget.table.orders.remove(o);if(widget.table.orders.isEmpty)widget.table.isBusy=false;});},child:Icon(Icons.remove_circle,color:Colors.red,size:20)),]),])).toList(),Divider(),Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text("TOTAL",style:TextStyle(fontWeight:FontWeight.bold,fontSize:18)),Text("Rs.${widget.table.total.toInt()}",style:TextStyle(fontWeight:FontWeight.bold,fontSize:18)),]),SizedBox(height:8),Row(children:[Expanded(child:ElevatedButton.icon(onPressed:(){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("KOT Sent to Kitchen for Table ${widget.table.id}!")));},icon:Icon(Icons.kitchen),label:Text("KOT SEND"),style:ElevatedButton.styleFrom(backgroundColor:Colors.orange))),SizedBox(width:8),Expanded(child:ElevatedButton.icon(onPressed:(){showDialog(context:context,builder:(_)=>AlertDialog(title:Text("Bill - Table ${widget.table.id}"),content:Text("Total: Rs.${widget.table.total.toInt()}\n\nItems:\n${widget.table.orders.map((e)=>"${e.item.name} x${e.qty}").join("\n")}"),actions:[TextButton(onPressed:(){setState((){widget.table.orders.clear();widget.table.isBusy=false;});Navigator.pop(context);Navigator.pop(context);},child:Text("PAID & CLEAR TABLE"))]));},icon:Icon(Icons.receipt),label:Text("BILL"),style:ElevatedButton.styleFrom(backgroundColor:Colors.green))),])]))],),);
+class _MainScreenState extends State<MainScreen> {
+  int _index = 0;
+  List<MenuItem> allItems = [];
+  List<CartItem> cart = [];
+  List<Map> closedOrders = [];
+  List<Map> onHoldOrders = [];
+  double todaySale = 0;
+
+  @override
+  void initState() { super.initState(); _loadData(); }
+
+  void _loadData() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<MenuItem> defaults = [];
+    var cats = {
+      'CHICKEN ITEM': ['Chicken Tawa Fry', 'Chicken Masala', 'Chicken Handi', 'Chicken Tikka', 'Chicken Lollypop', 'Chicken 65', 'Chicken Crispy'],
+      'MUTTON': ['Mutton Tawa Fry', 'Mutton Masala', 'Mutton Handi', 'Mutton Chap', 'Mutton Korma'],
+      'PRAWNS': ['Prawns Fry', 'Prawns Masala', 'Prawns Handi'],
+      'EGG': ['Egg Masala', 'Egg Fry', 'Egg Bhurji', 'Egg Curry'],
+      'RICE': ['Chicken Biryani Full', 'Chicken Biryani Half', 'Mutton Biryani Full', 'Mutton Biryani Half', 'Jeera Rice', 'Veg Pulao'],
+      'ROTI': ['Chapati', 'Roti', 'Naan', 'Paratha', 'Roomali Roti']
+    };
+    cats.forEach((cat, names) {
+      for (var n in names) {
+        defaults.add(MenuItem(name: n, category: cat, price: n.contains('Full')? 280 : n.contains('Half')? 150 : 200));
+      }
+    });
+    while(defaults.length < 177) {
+      defaults.add(MenuItem(name: 'Special Item ${defaults.length+1}', category: 'CHICKEN ITEM', price: 200));
+    }
+    String? saved = prefs.getString('menu');
+    if(saved!= null) {
+      allItems = (jsonDecode(saved) as List).map((e)=>MenuItem.fromJson(e)).toList();
+    } else {
+      allItems = defaults;
+    }
+    setState(() { todaySale = prefs.getDouble('sale')?? 0; });
+  }
+
+  void _saveMenu() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('menu', jsonEncode(allItems.map((e)=>e.toJson()).toList()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: [
+        HomeTab(todaySale: todaySale, closedCount: closedOrders.length, onHoldCount: onHoldOrders.length, onAddOrder: ()=>setState(()=>_index=2)),
+        ItemsTab(items: allItems, onAddItem: (m){ setState(()=>allItems.add(m)); _saveMenu(); }),
+        OrderTab(allItems: allItems, cart: cart, onBill: (total){ setState((){ todaySale+=total; closedOrders.add({'total':total}); }); cart.clear(); _index=0; }, onHold: (items){ setState(()=>onHoldOrders.add({'items':items})); cart.clear(); _index=0; }),
+        ReportsTab(sale: todaySale, orders: closedOrders.length),
+        MoreTab()
+      ][_index],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _index, type: BottomNavigationBarType.fixed, selectedItemColor: Colors.deepOrange,
+        onTap: (i)=>setState(()=>_index=i),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Items'),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 40), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
+        ],
+      ),
+    );
+  }
 }
+
+class HomeTab extends StatelessWidget {
+  final double todaySale; final int closedCount; final int onHoldCount; final VoidCallback onAddOrder;
+  HomeTab({required this.todaySale, required this.closedCount, required this.onHoldCount, required this.onAddOrder});
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(child: ListView(padding: EdgeInsets.all(16), children: [
+      Text('KGN TAWA FRY', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+      SizedBox(height: 16),
+      Row(children: [
+        Expanded(child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Today sales'), Text('₹${todaySale.toStringAsFixed(0)}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))]))),
+        SizedBox(width: 12),
+        Expanded(child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Today orders'), Text('$closedCount', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))]))),
+      ]),
+      SizedBox(height: 20),
+      Text('Quick Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      SizedBox(height: 12),
+      Row(children: [
+        Expanded(child: Container(margin: EdgeInsets.all(6), padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)), child: Column(children: [Icon(Icons.receipt, color: Colors.deepOrange), Text('Closed Orders'), Text('$closedCount', style: TextStyle(fontWeight: FontWeight.bold))]))),
+        Expanded(child: Container(margin: EdgeInsets.all(6), padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)), child: Column(children: [Icon(Icons.pause_circle, color: Colors.deepOrange), Text('On Hold'), Text('$onHoldCount', style: TextStyle(fontWeight: FontWeight.bold))]))),
+        Expanded(child: InkWell(onTap: onAddOrder, child: Container(margin: EdgeInsets.all(6), padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)), child: Column(children: [Icon(Icons.add_box, color: Colors.deepOrange), Text('Add Items')])))),
+      ]),
+    ]));
+  }
 }
+
+class ItemsTab extends StatefulWidget {
+  final List<MenuItem> items; final Function(MenuItem) onAddItem;
+  ItemsTab({required this.items, required this.onAddItem});
+  @override
+  _ItemsTabState createState() => _ItemsTabState();
+}
+class _ItemsTabState extends State<ItemsTab> {
+  String selectedCat = 'ALL'; String search = '';
+  List<String> get categories => ['ALL',...widget.items.map((e)=>e.category).toSet()];
+  @override
+  Widget build(BuildContext context) {
+    var filtered = widget.items.where((e){ bool catOk = selectedCat=='ALL' || e.category==selectedCat; bool searchOk = e.name.toLowerCase().contains(search.toLowerCase()); return catOk && searchOk; }).toList();
+    return SafeArea(child: Column(children: [
+      Padding(padding: EdgeInsets.all(12), child: TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search items...', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), onChanged: (v)=>setState(()=>search=v))),
+      SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: categories.map((c)=> Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: ChoiceChip(label: Text(c, style: TextStyle(fontSize: 11)), selected: selectedCat==c, onSelected: (_)=>setState(()=>selectedCat=c)))).toList())),
+      Expanded(child: GridView.builder(padding: EdgeInsets.all(10), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.75, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: filtered.length, itemBuilder: (ctx,i){
+        var it = filtered[i];
+        return Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)), child: Column(children: [
+          Expanded(child: Container(decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.vertical(top: Radius.circular(10))), child: Center(child: Icon(Icons.fastfood, size: 40, color: Colors.deepOrange)))),
+          Padding(padding: EdgeInsets.all(4), child: Text(it.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Text('₹${it.price.toStringAsFixed(0)}', style: TextStyle(fontSize: 11, color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+        ]));
+      })),
+      Padding(padding: EdgeInsets.all(10), child: ElevatedButton.icon(onPressed: (){ showDialog(context: context, builder: (_)=>AddItemDialog(onAdd: widget.onAddItem)); }, icon: Icon(Icons.add), label: Text('Add Menu Item'), style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, minimumSize: Size(double.infinity, 45))))
+    ]));
+  }
+}
+
+class AddItemDialog extends StatefulWidget {
+  final Function(MenuItem) onAdd; AddItemDialog({required this.onAdd});
+  @override
+  _AddItemDialogState createState() => _AddItemDialogState();
+}
+class _AddItemDialogState extends State<AddItemDialog> {
+  final _name = TextEditingController(); final _price = TextEditingController(); String cat = 'CHICKEN ITEM';
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(title: Text('Add Menu Item'), content: Column(mainAxisSize: MainAxisSize.min, children: [
+      TextField(controller: _name, decoration: InputDecoration(labelText: 'Item Name')),
+      TextField(controller: _price, decoration: InputDecoration(labelText: 'Price'), keyboardType: TextInputType.number),
+      DropdownButton<String>(value: cat, isExpanded: true, items: ['CHICKEN ITEM','MUTTON','PRAWNS','EGG','RICE','ROTI'].map((e)=>DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: (v)=>setState(()=>cat=v!))
+    ]), actions: [
+      TextButton(onPressed: ()=>Navigator.pop(context), child: Text('Cancel')),
+      ElevatedButton(onPressed: (){ widget.onAdd(MenuItem(name: _name.text, category: cat, price: double.tryParse(_price.text)??0)); Navigator.pop(context); }, child: Text('Add'))
+    ]);
+  }
+}
+
+class OrderTab extends StatefulWidget {
+  final List<MenuItem> allItems; final List<CartItem> cart; final Function(double) onBill; final Function(List<CartItem>) onHold;
+  OrderTab({
