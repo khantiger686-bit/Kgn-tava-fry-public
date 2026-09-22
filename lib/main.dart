@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(const KGNTableApp());
 
-// MODELS
 class MenuItem { String id, name, category, kitchen; double price; int stock; String emoji; MenuItem({required this.id, required this.name, required this.category, required this.kitchen, required this.price, this.stock=100, required this.emoji}); }
 class TableModel { String id, name; String status; String? currentOrderId; TableModel({required this.id, required this.name, this.status='empty', this.currentOrderId}); }
 class OrderItem { MenuItem item; int qty; String note; OrderItem({required this.item, required this.qty, this.note=''}); }
 class Order { String id; String tableId; String type; String status; List<OrderItem> items; double discount; DateTime time; bool kotSent; Order({required this.id, required this.tableId, required this.type, required this.status, required this.items, this.discount=0, required this.time, this.kotSent=false}); double get total => items.fold(0,(s,i)=>s+i.item.price*i.qty) - discount; }
 
-// MAIN APP
 class KGNTableApp extends StatelessWidget {
   const KGNTableApp({super.key});
   @override
@@ -26,7 +24,6 @@ class MainScreen extends StatefulWidget { const MainScreen({super.key}); @overri
 
 class _MainScreenState extends State<MainScreen> {
   int navIndex = 0;
-  // DATA
   List<MenuItem> menu = [
     MenuItem(id:'1', name:'Chicken Biryani Half', category:'CHICKEN', kitchen:'Main', price:80, emoji:'🍚'),
     MenuItem(id:'2', name:'Chicken Masala Half', category:'CHICKEN', kitchen:'Main', price:120, emoji:'🍛'),
@@ -78,7 +75,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // HOME PAGE - EXACT VIDEO JAI SA
   Widget _homePage(){
     return SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [const Text("KGN TAWA FRY ▼", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const Spacer(), IconButton(onPressed: (){}, icon: const Icon(Icons.notifications_none))]),
@@ -129,7 +125,6 @@ class _MainScreenState extends State<MainScreen> {
     return Expanded(child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [CircleAvatar(backgroundColor: c.withOpacity(0.15), child: Icon(ic, color: c, size:18)), const SizedBox(height:8), Text(t, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)), Text(s, style: const TextStyle(fontSize: 10, color: Colors.grey)) ])));
   }
 
-  // TABLES PAGE
   Widget _tablesPage(){
     return SafeArea(child: Column(children: [
       Padding(padding: const EdgeInsets.all(16), child: Row(children: [const Text("Table Management", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), const Spacer(), _statusDot(Colors.green, "Empty"), const SizedBox(width:8), _statusDot(Colors.orange, "Occupied"), const SizedBox(width:8), _statusDot(Colors.red, "Bill")])),
@@ -143,12 +138,10 @@ class _MainScreenState extends State<MainScreen> {
   Widget _statusDot(Color c, String l)=> Row(children: [Container(width:10,height:10,decoration: BoxDecoration(color: c, shape: BoxShape.circle)), const SizedBox(width:4), Text(l, style: const TextStyle(fontSize: 10))]);
   void _addTable(){ setState(()=>tables.add(TableModel(id:'T${tables.length+1}', name:'T-${tables.length+1}'))); }
 
-  // BILLING FOR TABLE
   void _openTableBilling(TableModel table){
     currentTableId = table.name;
     currentOrderType = 'Dine-in';
     currentCart = [];
-    setState(()=>navIndex=4); // go to billing sheet actually we show modal
     showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.white, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))), builder: (_)=> _billingSheet(table));
   }
 
@@ -165,7 +158,6 @@ class _MainScreenState extends State<MainScreen> {
           ChoiceChip(label: const Text("Delivery"), selected: currentOrderType=='Delivery', onSelected: (_){ setModal(()=>currentOrderType='Delivery'); setState(()=>currentOrderType='Delivery'); }),
         ])),
         const SizedBox(height:8),
-        // MENU GRID
         Expanded(child: GridView.builder(controller: ctrl, padding: const EdgeInsets.all(10), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.75, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: menu.length, itemBuilder: (_,i){
           var m = menu[i];
           var existing = currentCart.where((c)=>c.item.id==m.id).toList();
@@ -195,24 +187,23 @@ class _MainScreenState extends State<MainScreen> {
               if(table!=null) { table.status='occupied'; table.currentOrderId=order.id; }
               currentCart.clear();
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order On Hold - KOT Pending")));
-            }, child: const Text("Save & Hold"))),
-            const SizedBox(width:10),
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order On Hold")));
+            }, child: const Text("Hold"))),
+            const SizedBox(width:8),
             Expanded(child: OutlinedButton(style: OutlinedButton.styleFrom(backgroundColor: Colors.orange.shade50), onPressed: (){
-              // KOT
               var order = Order(id:'${DateTime.now().millisecondsSinceEpoch}', tableId: currentTableId, type: currentOrderType, status:'kot', items: List.from(currentCart), time: DateTime.now(), kotSent: true);
               setState(()=> orders.add(order));
               if(table!=null) table.status='occupied';
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("KOT Sent to Kitchen - ${order.items.length} items")));
-            }, child: const Text("Send KOT"))),
-            const SizedBox(width:10),
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("KOT Sent - ${order.items.length} items")));
+            }, child: const Text("KOT"))),
+            const SizedBox(width:8),
             Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.blue), onPressed: (){
               var order = Order(id:'${DateTime.now().millisecondsSinceEpoch}', tableId: currentTableId, type: currentOrderType, status:'closed', items: List.from(currentCart), time: DateTime.now(), kotSent: true);
-              setState(()=>{ orders.add(order); todaysSale+=total; todaysOrderCount++; if(table!=null){ table.status='empty'; table.currentOrderId=null; } });
+              setState(()=>{ orders.add(order), todaysSale+=total, todaysOrderCount++, if(table!=null){ table.status='empty', table.currentOrderId=null } });
               Navigator.pop(context);
               _showBill(order);
               currentCart.clear();
-            }, child: const Text("Save & Bill", style: TextStyle(color: Colors.white)))),
+            }, child: const Text("Bill", style: TextStyle(color: Colors.white)))),
           ]),
         ])),
       ]));
@@ -224,20 +215,19 @@ class _MainScreenState extends State<MainScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Column(children: [const Text("KGN TAWA FRY", style: TextStyle(fontWeight: FontWeight.bold)), Text("+91 7016742863", style: TextStyle(fontSize: 11, color: Colors.grey[600])), const Divider(), Text("Bill of Supply - ${order.type}", style: const TextStyle(fontSize: 12)), Text("Table: ${order.tableId} | ${order.time.hour}:${order.time.minute}", style: const TextStyle(fontSize: 10, color: Colors.grey))]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
-       ...order.items.map((e)=> Padding(padding: const EdgeInsets.symmetric(vertical:2), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Expanded(child: Text("${e.item.name} x${e.qty}", style: const TextStyle(fontSize: 12))), Text("₹${e.item.price*e.qty}", style: const TextStyle(fontSize: 12))]))),
+      ...order.items.map((e)=> Padding(padding: const EdgeInsets.symmetric(vertical:2), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Expanded(child: Text("${e.item.name} x${e.qty}", style: const TextStyle(fontSize: 12))), Text("₹${e.item.price*e.qty}", style: const TextStyle(fontSize: 12))]))),
         const Divider(),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Total", style: TextStyle(fontWeight: FontWeight.bold)), Text("₹${order.total}", style: const TextStyle(fontWeight: FontWeight.bold))]),
         const SizedBox(height:10),
         const Text("No GST - Thank you!", style: TextStyle(fontSize: 10, color: Colors.grey)),
       ]),
-      actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text("Close")), ElevatedButton(onPressed: (){Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Printed to Thermal Printer 🖨️")));}, child: const Text("Print & Close"))],
+      actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text("Close")), ElevatedButton(onPressed: (){Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Printed 🖨️")));}, child: const Text("Print"))],
     ));
   }
 
-  // ORDERS PAGE WITH KOT
   Widget _ordersPage(){
     return DefaultTabController(length: 4, child: SafeArea(child: Column(children: [
-      AppBar(title: const Text("Orders & KOT"), backgroundColor: Colors.white, bottom: const TabBar(tabs: [Tab(text:"All"), Tab(text:"KOT"), Tab(text:"On Hold"), Tab(text:"Closed")])),
+      AppBar(title: const Text("Orders & KOT"), backgroundColor: Colors.white, bottom: const TabBar(isScrollable: true, tabs: [Tab(text:"All"), Tab(text:"KOT"), Tab(text:"On Hold"), Tab(text:"Closed")])),
       Expanded(child: TabBarView(children: [
         _orderList(orders),
         _orderList(orders.where((o)=>o.status=='kot').toList(), isKOT:true),
@@ -246,5 +236,20 @@ class _MainScreenState extends State<MainScreen> {
       ])),
     ])));
   }
+
   Widget _orderList(List<Order> list, {bool isKOT=false}){
-    if(list.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.receipt_long, size:60, color: Colors.grey.shade300), const SizedBox(height:10), Text(isKOT? "No KOT Pending" : "No Orders", 
+    if(list.isEmpty){
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long, size:60, color: Colors.grey.shade300),
+            const SizedBox(height:10),
+            Text(isKOT? "No KOT Pending" : "No Orders", style: TextStyle(color: Colors.grey.shade500)),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(itemCount: list.length, padding: const EdgeInsets.all(12), itemBuilder: (_,i){
+      var o = list[i];
+      return Ca
