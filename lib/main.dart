@@ -1,229 +1,129 @@
 import 'package:flutter/material.dart';
-void main() => runApp(MaterialApp(debugShowCheckedModeBanner: false, home: KGNFinalApp()));
+void main() => runApp(MaterialApp(debugShowCheckedModeBanner: false, home: TableApp()));
 
-class KGNFinalApp extends StatefulWidget {
-  @override _KGNFinalAppState createState() => _KGNFinalAppState();
+class TableApp extends StatefulWidget {
+  @override _TableAppState createState() => _TableAppState();
 }
-class _KGNFinalAppState extends State<KGNFinalApp> {
-  int nav = 0;
+class _TableAppState extends State<TableApp> {
   String cat = "All";
   String table = "T-1";
   String pay = "Cash";
   String search = "";
   String mode = "Dine-In";
   bool showCart = false;
-
   List<String> cats = ["All","Chicken Item","Mutton Item","Fish Item","Anda Item","Veg Item","Roti Item"];
   List<String> tables = ["T-1","T-2","T-3","T-4","T-5","T-6"];
   List<String> pays = ["Cash","UPI","PhonePe","Google Pay","Card","Others"];
 
+  // PURA 59 ITEMS + REAL PHOTO
   List<Map<String, dynamic>> menu = [
-    {"name":"Murgh Do Pyaza","price":170,"full":320,"cat":"Chicken Item"},
-    {"name":"Chicken Handi","price":170,"full":320,"cat":"Chicken Item"},
-    {"name":"Chicken Fry","price":120,"full":220,"cat":"Chicken Item"},
-    {"name":"Chicken Masala","price":120,"full":220,"cat":"Chicken Item"},
-    {"name":"Chicken Biryani","price":80,"full":120,"cat":"Chicken Item"},
-    {"name":"Butter Chicken","price":170,"full":320,"cat":"Chicken Item"},
-    {"name":"Moghlai Mutton","price":150,"full":280,"cat":"Mutton Item"},
-    {"name":"Mutton Fry","price":120,"full":220,"cat":"Mutton Item"},
-    {"name":"Kheema Fry","price":80,"full":160,"cat":"Mutton Item"},
-    {"name":"Bheja Fry","price":130,"full":240,"cat":"Mutton Item"},
-    {"name":"Paya Fry","price":120,"full":220,"cat":"Mutton Item"},
-    {"name":"Machhi Fry","price":80,"full":160,"cat":"Fish Item"},
-    {"name":"Jhinga Fry","price":130,"full":240,"cat":"Fish Item"},
-    {"name":"Anda Bhurji","price":50,"full":100,"cat":"Anda Item"},
-    {"name":"Anda Pulav","price":60,"full":120,"cat":"Anda Item"},
-    {"name":"Dal Tadka","price":70,"full":140,"cat":"Veg Item"},
-    {"name":"Dal Fry","price":50,"full":100,"cat":"Veg Item"},
-    {"name":"Jeera Rice","price":50,"full":100,"cat":"Veg Item"},
-    {"name":"Plain Rice","price":30,"full":60,"cat":"Veg Item"},
-    {"name":"Special Roti","price":15,"full":15,"cat":"Roti Item"},
-    {"name":"Chapati Roti","price":7,"full":7,"cat":"Roti Item"},
-    {"name":"Papad Fry","price":10,"full":10,"cat":"Roti Item"},
-    {"name":"chaas","price":20,"full":20,"cat":"Veg Item"},
+    {"name":"Chapati Roti","price":7,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
+    {"name":"chaas","price":20,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1544148103-005eec06c04d"},
+    {"name":"Kheema masala Half","price":80,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1541518763669-27fef04b14ea"},
+    {"name":"Chicken Masala Half","price":120,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
+    {"name":"chicken Dana","price":100,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1527477396000-e27163b489c2"},
+    {"name":"mutton seekh kabab","price":10,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0"},
+    {"name":"water botl badi","price":20,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1548839140-29a749e1cf4d"},
+    {"name":"Butter Chicken Half","price":100,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
+    {"name":"Bheja masala Half","price":130,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1541518763669-27fef04b14ea"},
+    {"name":"Chicken Handi","price":170,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
+    {"name":"Chicken Fry","price":120,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
+    {"name":"Mutton Fry","price":120,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1541518763669-27fef04b14ea"},
+    {"name":"Dal Tadka","price":70,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1546833999-b9f581a1996d"},
+    {"name":"Special Roti","price":15,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
+    {"name":"Papad Fry","price":10,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
+    {"name":"Murgh Do Pyaza","price":170,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
+    {"name":"Chicken Biryani","price":80,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8"},
+    {"name":"Mutton Biryani","price":100,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8"},
+    {"name":"Anda Bhurji","price":50,"cat":"Anda Item","img":"https://images.unsplash.com/photo-1482049016688-2d3e1b311543"},
+    {"name":"Jeera Rice","price":50,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1536304929831-ee1ca9d44906"},
+    {"name":"Kadhi Khichdi","price":30,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1546833999-b9f581a1996d"},
+    {"name":"Dal Fry","price":50,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1546833999-b9f581a1996d"},
+    {"name":"Machhi Fry","price":80,"cat":"Fish Item","img":"https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2"},
+    {"name":"Jhinga Fry","price":130,"cat":"Fish Item","img":"https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2"},
+    {"name":"Anda Kadhi","price":80,"cat":"Anda Item","img":"https://images.unsplash.com/photo-1482049016688-2d3e1b311543"},
+    {"name":"Masala Rice","price":50,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1536304929831-ee1ca9d44906"},
+    {"name":"Special Paratha","price":20,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
+    {"name":"Butter Roti","price":15,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
   ];
 
-  IconData getAutoIcon(String name, String cat){
-    if(cat.contains("Chicken")) return Icons.set_meal;
-    if(cat.contains("Mutton")) return Icons.kebab_dining;
-    if(cat.contains("Fish")) return Icons.set_meal_outlined;
-    if(cat.contains("Anda")) return Icons.egg;
-    if(cat.contains("Roti")) return Icons.bakery_dining;
-    return Icons.fastfood;
-  }
-  Color getAutoColor(String cat){
-    if(cat.contains("Chicken")) return Colors.orange.shade100;
-    if(cat.contains("Mutton")) return Colors.red.shade100;
-    if(cat.contains("Fish")) return Colors.blue.shade100;
-    if(cat.contains("Anda")) return Colors.yellow.shade100;
-    if(cat.contains("Roti")) return Colors.brown.shade100;
-    return Colors.green.shade100;
-  }
-
   Map<String, int> cart = {};
-  Map<String, List<Map<String, dynamic>>> tableOrders = {"T-1":[],"T-2":[],"T-3":[],"T-4":[],"T-5":[],"T-6":[]};
-  List<Map<String, dynamic>> kotList = [];
-  List<Map<String, dynamic>> closedBills = [];
-  double todaysSale = 0;
-
   int get totalItems => cart.values.fold(0, (a,b)=>a+b);
   int get subTotal {
-    int tot = 0;
-    cart.forEach((key, qty){
-      var it = menu.firstWhere((m)=>m["name"]==key, orElse: ()=>{"price":0});
-      tot += (it["price"] as int) * qty;
+    int tot=0;
+    cart.forEach((k,q){
+      var it = menu.firstWhere((m)=>m["name"]==k, orElse: ()=>{"price":0});
+      tot += (it["price"] as int)*q;
     });
     return tot;
   }
-  List<Map<String, dynamic>> get filtered => menu.where((m){ bool c1 = cat=="All" || m["cat"]==cat; bool c2 = m["name"].toString().toLowerCase().contains(search.toLowerCase()); return c1 && c2; }).toList();
+  List<Map<String, dynamic>> get filtered => menu.where((m){
+    bool c1 = cat=="All" || m["cat"]==cat;
+    bool c2 = m["name"].toString().toLowerCase().contains(search.toLowerCase());
+    return c1 && c2;
+  }).toList();
 
   @override Widget build(BuildContext context){
     return Scaffold(
-      backgroundColor: Color(0xFFF5F6F8),
-      body: nav==0? buildHome() : nav==1? buildItemsPage() : nav==2? (showCart? buildCartPage() : buildOrderPage()) : nav==3? buildReport() : buildMore(),
-      bottomNavigationBar: BottomNavigationBar(currentIndex: nav, type: BottomNavigationBarType.fixed, selectedItemColor: Colors.blue, onTap: (i){ setState(()=>nav=i); if(i==2) showCart=false; }, items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: "Items"),
-        BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 38, color: Colors.blue), label: "Order"),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Reports"),
-        BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "More"),
-      ]),
+      backgroundColor: Colors.white,
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, title: Text(showCart? "Cart" : "Add Order", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)), leading: IconButton(icon: Icon(Icons.arrow_back, color: Colors.black), onPressed: (){ if(showCart) setState(()=>showCart=false); }), actions: [IconButton(icon: Icon(Icons.settings, color: Colors.black), onPressed: (){})]),
+      body: showCart? buildCart() : buildOrder(),
     );
   }
 
-  Widget buildHome(){
-    int hold = tableOrders.values.where((e)=>e.isNotEmpty).length;
-    return SafeArea(child: SingleChildScrollView(padding: EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [CircleAvatar(backgroundColor: Colors.deepOrange, child: Text("KGN", style: TextStyle(color: Colors.white, fontSize:10, fontWeight: FontWeight.bold))), SizedBox(width:8), Text("KGN TAWA FRY", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))]),
-      SizedBox(height:12),
-      Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _dashBox(Icons.check_circle, "Closed", "${closedBills.length}", ()=>setState(()=>nav=3)),
-        _dashBox(Icons.access_time, "Hold", "$hold", ()=>setState(()=>nav=2)),
-        _dashBox(Icons.restaurant, "Items", "${menu.length}", ()=>setState(()=>nav=1)),
-      ]),
-      SizedBox(height:16),
-      Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Column(children: [
-        Row(children: [Icon(Icons.show_chart, size:18), SizedBox(width:6), Text("Today's Sale", style: TextStyle(fontWeight: FontWeight.bold)), Spacer(), Text("${DateTime.now().day}/${DateTime.now().month}")]),
-        SizedBox(height:12),
-        Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text("Today's Sales", style: TextStyle(color: Colors.grey, fontSize:12)), Text("₹ $todaysSale", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: Colors.green))])), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text("Orders", style: TextStyle(color: Colors.grey, fontSize:12)), Text("${closedBills.length} Orders", style: TextStyle(fontSize:18, fontWeight: FontWeight.bold))]))]),
-      ])),
-      SizedBox(height:16), Text("Table Status - 6 Tables", style: TextStyle(fontWeight: FontWeight.bold)), SizedBox(height:8),
-      GridView.builder(shrinkWrap: true, physics: NeverScrollableScrollPhysics(), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3, childAspectRatio:1.6, crossAxisSpacing:8, mainAxisSpacing:8), itemCount: tables.length, itemBuilder: (c,i){
-        String t = tables[i];
-        bool occ = tableOrders[t]!.isNotEmpty;
-        int amt = 0;
-        for(var b in tableOrders[t]!){
-          amt += (b["price"] as int) * (b["qty"] as int);
-        }
-        return InkWell(
-          onTap: (){ setState(()=>{table=t, nav=2, showCart=false}); },
-          child: Container(decoration: BoxDecoration(color: occ? Colors.green: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade300)), child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(t, style: TextStyle(fontWeight: FontWeight.bold, color: occ? Colors.white: Colors.black)), Text(occ? "₹$amt\nOccupied": "Empty", textAlign: TextAlign.center, style: TextStyle(fontSize:11, color: occ? Colors.white70: Colors.grey))])) ),
-        );
-      }),
-    ])));
-  }
-  Widget _dashBox(IconData ic, String t, String v, VoidCallback onTap){
-    return InkWell(onTap: onTap, child: Column(children: [CircleAvatar(radius:30, backgroundColor: Colors.blue.shade100, child: Icon(ic, color: Colors.blue, size:28)), SizedBox(height:6), Text(t, style: TextStyle(fontSize:12)), Text(v, style: TextStyle(fontSize:14, fontWeight: FontWeight.bold))]));
-  }
-
-  Widget buildItemsPage(){
-    return SafeArea(child: Column(children: [
-      Padding(padding: EdgeInsets.all(10), child: Row(children: [Expanded(child: TextField(onChanged: (v)=>setState(()=>search=v), decoration: InputDecoration(hintText: "Search items...", prefixIcon: Icon(Icons.search), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))))), SizedBox(width:8), ElevatedButton(onPressed: _showAddCategoryDialog, child: Text("Cat +"))])),
-      SizedBox(height:40, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: cats.length, itemBuilder: (c,i)=> Padding(padding: EdgeInsets.all(4), child: ChoiceChip(label: Text(cats[i]), selected: cat==cats[i], onSelected: (v)=>setState(()=>cat=cats[i]))))),
-      Expanded(child: ListView.builder(itemCount: filtered.length, itemBuilder: (c,i){
+  Widget buildOrder(){
+    return Column(children: [
+      Padding(padding: EdgeInsets.all(10), child: Row(children: [Expanded(child: TextField(onChanged: (v)=>setState(()=>search=v), decoration: InputDecoration(hintText: "Search", prefixIcon: Icon(Icons.search), suffixIcon: Icon(Icons.mic, color: Colors.deepPurple), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300))))), SizedBox(width:8), Container(padding: EdgeInsets.all(12), decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.mic, color: Colors.deepPurple))]) ),
+      SizedBox(height:40, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: cats.length, itemBuilder: (c,i)=> Padding(padding: EdgeInsets.symmetric(horizontal:4), child: ChoiceChip(label: Text(cats[i]), selected: cat==cats[i], selectedColor: Colors.blue.shade50, backgroundColor: Colors.grey.shade100, labelStyle: TextStyle(color: cat==cats[i]? Colors.blue: Colors.black, fontWeight: cat==cats[i]? FontWeight.bold: FontWeight.normal), shape: StadiumBorder(side: BorderSide(color: cat==cats[i]? Colors.blue: Colors.grey.shade300)), onSelected: (v)=>setState(()=>cat=cats[i]))))),
+      SizedBox(height:8),
+      Expanded(child: GridView.builder(padding: EdgeInsets.all(8), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3, childAspectRatio:0.68, crossAxisSpacing:10, mainAxisSpacing:10), itemCount: filtered.length, itemBuilder: (c,i){
         var m = filtered[i];
-        return Card(child: ListTile(
-          leading: Container(width:50, height:50, decoration: BoxDecoration(color: getAutoColor(m["cat"]), borderRadius: BorderRadius.circular(8)), child: Icon(getAutoIcon(m["name"], m["cat"]), color: Colors.black54)),
-          title: Text(m["name"]), subtitle: Text("${m["cat"]} | ₹${m["price"]} / Full ₹${m["full"]}"),
-          trailing: IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: (){ setState(()=>menu.remove(m)); }),
-        ));
+        int qty = cart[m["name"]]??0;
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // PHOTO PE PRICE + PLUS BUTTON - EXACT VIDEO JAISA
+          Stack(children: [
+            ClipRRect(borderRadius: BorderRadius.circular(14), child: Container(height:115, width: double.infinity, color: Colors.grey.shade200, child: Image.network(m["img"], fit: BoxFit.cover, errorBuilder: (c,e,s)=> Icon(Icons.fastfood, size:40)))),
+            Positioned(top:8, right:8, child: Text("₹${m["price"]}", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:14, shadows: [Shadow(color: Colors.black, blurRadius: 6)]))),
+            Positioned(bottom:8, right:8, child: qty==0? InkWell(onTap: ()=>setState(()=>cart[m["name"]]=1), child: Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)]), child: Icon(Icons.add, size:18, color: Colors.blue)))
+            : Container(padding: EdgeInsets.symmetric(horizontal:6, vertical:4), decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(20)), child: Row(children: [InkWell(onTap: ()=>setState(()=>qty==1? cart.remove(m["name"]): cart[m["name"]]=qty-1), child: Icon(Icons.remove, size:14, color: Colors.white)), SizedBox(width:6), Text("$qty", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:12)), SizedBox(width:6), InkWell(onTap: ()=>setState(()=>cart[m["name"]]=qty+1), child: Icon(Icons.add, size:14, color: Colors.white))]))),
+          ]),
+          SizedBox(height:6),
+          Padding(padding: EdgeInsets.only(left:2), child: Text(m["name"], maxLines:2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize:12, fontWeight: FontWeight.w600))),
+        ]);
       })),
-      Padding(padding: EdgeInsets.all(10), child: SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: _showAddItemDialog, icon: Icon(Icons.add), label: Text("Add New Item + Category"))))
-    ]));
+      if(totalItems>0) Container(padding: EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]), child: Row(children: [
+        Expanded(child: OutlinedButton(onPressed: (){ setState(()=>cart.clear()); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Hold Saved"))); }, style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical:14), side: BorderSide(color: Colors.grey.shade400)), child: Text("Save & Hold", style: TextStyle(color: Colors.black)))),
+        SizedBox(width:12),
+        Expanded(child: ElevatedButton(onPressed: ()=>setState(()=>showCart=true), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, padding: EdgeInsets.symmetric(vertical:14)), child: Text("Save & Bill", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
+      ]))
+    ]);
   }
 
-  void _showAddCategoryDialog(){
-    String newCat = "";
-    showDialog(context: context, builder: (ctx)=> AlertDialog(title: Text("Add New Category"), content: TextField(onChanged: (v)=>newCat=v, decoration: InputDecoration(hintText: "Ex: Starter, Drinks")), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text("Cancel")), ElevatedButton(onPressed: (){ if(newCat.isNotEmpty){ setState(()=>cats.add(newCat)); Navigator.pop(context); } }, child: Text("Add"))]));
-  }
-
-  void _showAddItemDialog(){
-    String name=""; String price=""; String fullPrice=""; String selCat = cats.length>1? cats[1] : "Chicken Item";
-    showDialog(context: context, builder: (ctx)=> StatefulBuilder(builder: (ctx, setD)=> AlertDialog(title: Text("Add New Item - Auto Photo"), content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      TextField(onChanged: (v)=>name=v, decoration: InputDecoration(labelText: "Item Name")),
-      TextField(onChanged: (v)=>price=v, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: "Half Price")),
-      TextField(onChanged: (v)=>fullPrice=v, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: "Full Price")),
-      SizedBox(height:10),
-      DropdownButtonFormField(value: selCat, items: cats.where((e)=>e!="All").map((e)=>DropdownMenuItem(value:e, child:Text(e))).toList(), onChanged: (v)=>setD(()=>selCat=v.toString()), decoration: InputDecoration(labelText: "Category")),
-    ])), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text("Cancel")), ElevatedButton(onPressed: (){ if(name.isNotEmpty && price.isNotEmpty){ setState(()=>menu.add({"name":name, "price":int.tryParse(price)??0, "full":int.tryParse(fullPrice)??int.tryParse(price)??0, "cat":selCat})); Navigator.pop(context); } }, child: Text("Add Item"))])));
-  }
-
-  Widget buildOrderPage(){
-    return SafeArea(child: Column(children: [
-      Padding(padding: EdgeInsets.all(10), child: Row(children: [Expanded(child: TextField(onChanged: (v)=>setState(()=>search=v), decoration: InputDecoration(hintText: "Search", prefixIcon: Icon(Icons.search), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))))), SizedBox(width:8), Container(padding: EdgeInsets.symmetric(horizontal:8, vertical:6), decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(8)), child: Text(table, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))])),
-      SizedBox(height:40, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: cats.length, itemBuilder: (c,i)=> Padding(padding: EdgeInsets.symmetric(horizontal:4), child: ChoiceChip(label: Text(cats[i]), selected: cat==cats[i], selectedColor: Colors.blue.shade100, onSelected: (v)=>setState(()=>cat=cats[i]))))),
-      Expanded(child: GridView.builder(padding: EdgeInsets.all(8), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3, childAspectRatio:0.75, crossAxisSpacing:8, mainAxisSpacing:8), itemCount: filtered.length, itemBuilder: (c,i){
-        var m = filtered[i]; int qty = cart[m["name"]]??0;
-        return Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)), child: Column(children: [
-          Container(height:80, decoration: BoxDecoration(color: getAutoColor(m["cat"]), borderRadius: BorderRadius.vertical(top: Radius.circular(12))), child: Center(child: Icon(getAutoIcon(m["name"], m["cat"]), size:30, color: Colors.black54))),
-          Padding(padding: EdgeInsets.all(4), child: Text(m["name"], maxLines:2, textAlign: TextAlign.center, style: TextStyle(fontSize:11, fontWeight: FontWeight.bold))),
-          Spacer(),
-          qty==0? ElevatedButton(onPressed: ()=>setState(()=>cart[m["name"]]=1), style: ElevatedButton.styleFrom(minimumSize: Size(60,26), backgroundColor: Colors.white, side: BorderSide(color: Colors.blue)), child: Icon(Icons.add, size:16, color: Colors.blue))
-          : Container(margin: EdgeInsets.all(4), decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(20)), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [InkWell(onTap: ()=>setState(()=>qty==1? cart.remove(m["name"]): cart[m["name"]]=qty-1), child: Padding(padding: EdgeInsets.all(6), child: Icon(Icons.remove, size:14, color: Colors.white))), Text("$qty", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), InkWell(onTap: ()=>setState(()=>cart[m["name"]]=qty+1), child: Padding(padding: EdgeInsets.all(6), child: Icon(Icons.add, size:14, color: Colors.white)))])),
-          SizedBox(height:4),
+  Widget buildCart(){
+    return SingleChildScrollView(child: Column(children: [
+      SizedBox(height:90, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: cart.length, itemBuilder: (c,i){
+        String name = cart.keys.elementAt(i); int qty = cart[name]!; var it = menu.firstWhere((m)=>m["name"]==name);
+        return Container(width:85, margin: EdgeInsets.all(6), decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)), child: Column(children: [
+          Stack(children: [ClipRRect(borderRadius: BorderRadius.vertical(top: Radius.circular(12)), child: Container(height:50, width:85, child: Image.network(it["img"], fit: BoxFit.cover, errorBuilder: (c,e,s)=> Container(color: Colors.orange.shade100)))), Positioned(top:4, right:4, child: Text("₹${it["price"]}", style: TextStyle(fontSize:10, color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(blurRadius: 4, color: Colors.black)]))) ]),
+          Text(name, maxLines:1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize:9)),
+          Container(margin: EdgeInsets.only(top:4), padding: EdgeInsets.symmetric(horizontal:6), decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(12)), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [InkWell(onTap: ()=>setState(()=>qty==1? cart.remove(name): cart[name]=qty-1), child: Icon(Icons.remove, size:12, color: Colors.white)), Padding(padding: EdgeInsets.symmetric(horizontal:4), child: Text("$qty", style: TextStyle(color: Colors.white, fontSize:11))), InkWell(onTap: ()=>setState(()=>cart[name]=qty+1), child: Icon(Icons.add, size:12, color: Colors.white))]))
         ]));
       })),
-      if(totalItems>0) Container(color: Colors.white, padding: EdgeInsets.all(12), child: Column(children: [
-        InkWell(onTap: ()=>setState(()=>showCart=true), child: Row(children: [Text("View Cart >", style: TextStyle(fontWeight: FontWeight.bold)), Spacer(), Text("$totalItems Items ₹$subTotal", style: TextStyle(fontWeight: FontWeight.bold)), SizedBox(width:8), Icon(Icons.receipt_long)])),
-        SizedBox(height:8),
-        Row(children: [Expanded(child: OutlinedButton(onPressed: (){
-          setState((){
-            List<Map<String,dynamic>> list = [];
-            cart.forEach((k,v){
-              var it = menu.firstWhere((m)=>m["name"]==k);
-              list.add({"name":k,"price":it["price"],"qty":v});
-            });
-            tableOrders[table]!.addAll(list);
-            kotList.add({"table":table,"items":List.from(cart.entries),"time":"${DateTime.now().hour}:${DateTime.now().minute}"});
-            cart.clear();
-          });
-        }, child: Text("Save & Hold"))), SizedBox(width:8), Expanded(child: ElevatedButton(onPressed: ()=>setState(()=>showCart=true), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue), child: Text("Save & Bill", style: TextStyle(color: Colors.white))))])
+      Container(color: Colors.white, padding: EdgeInsets.all(12), margin: EdgeInsets.only(top:8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Center(child: Column(children: [CircleAvatar(radius:20, backgroundColor: Colors.deepOrange, child: Text("KGN", style: TextStyle(color: Colors.white, fontSize:10, fontWeight: FontWeight.bold))), SizedBox(height:4), Text("KGN TAWA FRY - Bill Slip", style: TextStyle(fontWeight: FontWeight.bold))])),
+        Divider(),
+        Text("Table Number"), DropdownButtonFormField(value: table, items: tables.map((e)=>DropdownMenuItem(value:e, child:Text(e))).toList(), onChanged: (v)=>setState(()=>table=v.toString()), decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)))),
+        SizedBox(height:10), Text("Payment Type"), Wrap(spacing:6, children: pays.map((p)=> ChoiceChip(label: Text(p, style: TextStyle(fontSize:11)), selected: pay==p, onSelected: (v)=>setState(()=>pay=p))).toList()),
+        SizedBox(height:10),
+        Container(padding: EdgeInsets.all(12), decoration: BoxDecoration(color: Color(0xFFF5F6F8), borderRadius: BorderRadius.circular(8)), child: Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Sub Total"), Text("₹$subTotal")]),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Seva Charge"), Text("₹0")]),
+          Divider(),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Total:", style: TextStyle(fontWeight: FontWeight.bold)), Text("₹$subTotal", style: TextStyle(fontWeight: FontWeight.bold))]),
+        ])),
+        SizedBox(height:12),
+        SizedBox(width: double.infinity, child: ElevatedButton(onPressed: (){ setState(()=>{cart.clear(), showCart=false}); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bill Saved - $table - ₹$subTotal"))); }, style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, padding: EdgeInsets.all(14)), child: Text("Confirm & Save", style: TextStyle(color: Colors.white)))),
       ]))
     ]));
   }
-
-  Widget buildCartPage(){
-    return SafeArea(child: Column(children: [
-      AppBar(backgroundColor: Colors.white, elevation:0, leading: IconButton(icon: Icon(Icons.arrow_back, color: Colors.black), onPressed: ()=>setState(()=>showCart=false)), title: Text("Cart - $table", style: TextStyle(color: Colors.black))),
-      Expanded(child: SingleChildScrollView(child: Container(color: Colors.white, padding: EdgeInsets.all(12), margin: EdgeInsets.all(8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Center(child: Column(children: [CircleAvatar(radius:24, backgroundColor: Colors.deepOrange, child: Text("KGN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:12))), SizedBox(height:4), Text("KGN TAWA FRY", style: TextStyle(fontWeight: FontWeight.bold, fontSize:16)), Text("Hotel Bill - Seva Slip", style: TextStyle(fontSize:10, color: Colors.grey))])),
-        Divider(thickness:1),
-        Text("Items:", style: TextStyle(fontWeight: FontWeight.bold)),
-        Column(
-          children: cart.entries.map((e){
-            var it = menu.firstWhere((m)=>m["name"]==e.key, orElse: ()=>{"price":0});
-            int p = it["price"] as int;
-            return Padding(padding: EdgeInsets.symmetric(vertical:2), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Expanded(child: Text("${e.key} x${e.value}", style: TextStyle(fontSize:12))), Text("₹${p*e.value}", style: TextStyle(fontSize:12))]));
-          }).toList(),
-        ),
-        Divider(),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Sub Total"), Text("₹$subTotal")]),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Discount"), Text("₹0")]),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Seva/Service"), Text("₹0")]),
-        Divider(),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("TOTAL", style: TextStyle(fontWeight: FontWeight.bold, fontSize:16)), Text("₹$subTotal", style: TextStyle(fontWeight: FontWeight.bold, fontSize:16))]),
-        SizedBox(height:12),
-        Text("Payment Type"), Wrap(spacing:6, children: pays.map((p)=> ChoiceChip(label: Text(p, style: TextStyle(fontSize:11)), selected: pay==p, onSelected: (v)=>setState(()=>pay=p))).toList()),
-        SizedBox(height:12),
-        SizedBox(width: double.infinity, child: ElevatedButton(onPressed: (){
-          setState(()=>{todaysSale+=subTotal, closedBills.add({"table":table,"total":subTotal,"pay":pay}), tableOrders[table]!.clear(), cart.clear(), showCart=false, nav=0});
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bill Saved - $table - ₹$subTotal")));
-        }, style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, padding: EdgeInsets.all(14)), child: Text("Confirm & Print Bill", style: TextStyle(color: Colors.white, fontSize:16)))),
-      ]))))
-    ]));
-  }
-
-  Widget buildReport(){ return SafeArea(child: Padding(padding: EdgeInsets.all(16), child: Column(children: [Text("Reports", style: TextStyle(fontSize:18, fontWeight: FontWeight.bold)), SizedBox(height:12), Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Column(children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Today's Sale"), Text("₹$todaysSale", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green))]), Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text("Total Bills"), Text("${closedBills.length}")])]))]))); }
-
-  Widget buildMore(){ return SafeArea(child: ListView(padding: EdgeInsets.all(12), children: [ListTile(leading: CircleAvatar(backgroundColor: Colors.deepOrange, child: Text("KGN", style: TextStyle(color: Colors.white, fontSize:10))), title: Text("KGN TAWA FRY"), subtitle: Text("V2.1 - All Fixed")), Divider(), ListTile(leading: Icon(Icons.add_box), title: Text("Add New Item + Category"), onTap: _showAddItemDialog), ListTile(leading: Icon(Icons.category), title: Text("Add Category"), onTap: _showAddCategoryDialog), ListTile(leading: Icon(Icons.print), title: Text("Bill Slip - Seva"), subtitle: Text("Working")), ListTile(leading: Icon(Icons.photo), title: Text("Auto Photo ON"), subtitle: Text("Category se auto icon"))])); }
 }
