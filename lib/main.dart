@@ -1,130 +1,428 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-void main() => runApp(MaterialApp(debugShowCheckedModeBanner: false, home: KGNTableApp()));
-
-class KGNTableApp extends StatefulWidget {
-  @override
-  _KGNTableAppState createState() => _KGNTableAppState();
+void main() {
+  runApp(const TableByKgnApp());
 }
 
-class _KGNTableAppState extends State<KGNTableApp> {
-  String selectedTable = "T-1";
-  String channel = "dine";
-  int pax = 2;
-  String selectedCat = "All";
-  String search = "";
-  bool showNotes = false;
+class TableByKgnApp extends StatelessWidget {
+  const TableByKgnApp({super.key});
 
-  List<String> cats = ["All","Bestsellers","Tava Fry Specials","Chicken Item","Mutton Item","Roti Item","Veg Item"];
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Table by Kgn',
+      theme: ThemeData(
+        primarySwatch: Colors.deepOrange,
+        useMaterial3: true,
+      ),
+      home: const BillingPOSScreen(),
+    );
+  }
+}
 
-  List<Map<String, dynamic>> menu = [
-    {"id":1,"name":"Chapati Roti","price":7,"type":"veg","qty":0,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
-    {"id":2,"name":"chaas","price":20,"type":"veg","qty":0,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1544148103-005eec06c04d"},
-    {"id":3,"name":"Kheema masala Half","price":80,"type":"nonveg","qty":0,"cat":"Mutton Item","img":"https://images.unsplash.com/photo-1541518763669-27fef04b14ea"},
-    {"id":4,"name":"Chicken Masala Half","price":120,"type":"nonveg","qty":0,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
-    {"id":5,"name":"Chicken Tava Fry","price":280,"type":"nonveg","qty":2,"cat":"Tava Fry Specials","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
-    {"id":6,"name":"Mutton Bheja Masala Fry","price":320,"type":"nonveg","qty":1,"cat":"Tava Fry Specials","img":"https://images.unsplash.com/photo-1541518763669-27fef04b14ea"},
-    {"id":7,"name":"Tandoori Roti (Butter)","price":25,"type":"veg","qty":4,"cat":"Roti Item","img":"https://images.unsplash.com/photo-1585937421612-70a008356fbe"},
-    {"id":8,"name":"Fresh Lime Soda","price":60,"type":"veg","qty":2,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1544148103-005eec06c04d"},
-    {"id":9,"name":"Murgh Do Pyaza","price":170,"type":"nonveg","qty":0,"cat":"Chicken Item","img":"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398"},
-    {"id":10,"name":"Dal Tadka","price":70,"type":"veg","qty":0,"cat":"Veg Item","img":"https://images.unsplash.com/photo-1546833999-b9f581a1996d"},
+// Item Model
+class MenuItem {
+  final String id;
+  final String name;
+  final double price;
+  final String category;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.category,
+  });
+}
+
+// Cart Item Model
+class CartItem {
+  final MenuItem item;
+  int quantity;
+
+  CartItem({required this.item, this.quantity = 1});
+
+  double get total => item.price * quantity;
+}
+
+class BillingPOSScreen extends StatefulWidget {
+  const BillingPOSScreen({super.key});
+
+  @override
+  State<BillingPOSScreen> createState() => _BillingPOSScreenState();
+}
+
+class _BillingPOSScreenState extends State<BillingPOSScreen> {
+  // Sample Tables Data
+  final List<String> tables = ['T-01', 'T-02', 'T-03', 'T-04', 'T-05', 'Takeaway'];
+  String selectedTable = 'T-01';
+
+  // Sample Menu Data
+  final List<MenuItem> menuItems = [
+    MenuItem(id: '1', name: 'Paneer Butter Masala', price: 260.0, category: 'Main Course'),
+    MenuItem(id: '2', name: 'Butter Naan', price: 40.0, category: 'Breads'),
+    MenuItem(id: '3', name: 'Chicken Biryani', price: 290.0, category: 'Main Course'),
+    MenuItem(id: '4', name: 'Veg Fried Rice', price: 180.0, category: 'Chinese'),
+    MenuItem(id: '5', name: 'Cold Coffee', price: 120.0, category: 'Beverages'),
+    MenuItem(id: '6', name: 'Gulab Jamun (2 Pcs)', price: 80.0, category: 'Desserts'),
   ];
 
-  List<Map<String, dynamic>> get filtered {
-    return menu.where((m) {
-      bool c1 = selectedCat == "All" || m["cat"] == selectedCat;
-      if(selectedCat=="Bestsellers") c1 = (m["id"] as int) <=6;
-      if(selectedCat=="Tava Fry Specials") c1 = m["cat"]=="Tava Fry Specials";
-      bool c2 = m["name"].toString().toLowerCase().contains(search.toLowerCase());
-      return c1 && c2;
-    }).toList();
-  }
+  // Cart & Order State
+  List<CartItem> cart = [];
+  double discountPercentage = 0.0;
 
-  int get totalQty { int t=0; for(var m in menu) t+=m["qty"] as int; return t; }
-  int get totalItems { int t=0; for(var m in menu) if((m["qty"] as int)>0) t++; return t; }
-  int get totalAmount { int t=0; for(var m in menu) t+=(m["price"] as int)*(m["qty"] as int); return t; }
+  // Calculation Logic
+  double get subtotal => cart.fold(0, (sum, item) => sum + item.total);
+  double get discountAmount => (subtotal * discountPercentage) / 100;
+  double get finalTotal => subtotal - discountAmount;
 
-  void showTableSheet(){
-    showModalBottomSheet(context: context, shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))), builder: (ctx){
-      return Container(padding: EdgeInsets.all(16), child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text("Select Table", style: TextStyle(fontWeight: FontWeight.bold)),
-          IconButton(icon: Icon(Icons.close), onPressed: ()=>Navigator.pop(context))
-        ]),
-        GridView.builder(shrinkWrap: true, gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: 6, itemBuilder: (c,i){
-          String t="T-${i+1}";
-          bool sel=selectedTable==t;
-          return InkWell(onTap: (){ setState(()=>selectedTable=t); Navigator.pop(context); }, child: Container(decoration: BoxDecoration(color: sel? Color(0xFFFFDBCE): Color(0xFFDAE2FD), borderRadius: BorderRadius.circular(12)), child: Center(child: Text(t, style: TextStyle(fontWeight: FontWeight.bold)))));
-        })
-      ]));
+  void addToCart(MenuItem item) {
+    setState(() {
+      int index = cart.indexWhere((c) => c.item.id == item.id);
+      if (index != -1) {
+        cart[index].quantity++;
+      } else {
+        cart.add(CartItem(item: item));
+      }
     });
   }
 
-  Widget channelBtn(String label, String val){
-    bool sel=channel==val;
-    return InkWell(onTap: (){ setState(()=>channel=val); }, child: Container(padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: sel? Colors.white: Colors.transparent, borderRadius: BorderRadius.circular(6)), child: Text(label, style: TextStyle(fontSize: 11, fontWeight: sel? FontWeight.bold: FontWeight.normal, color: sel? Color(0xFFA33900): Colors.grey))));
+  void updateQuantity(int index, int delta) {
+    setState(() {
+      cart[index].quantity += delta;
+      if (cart[index].quantity <= 0) {
+        cart.removeAt(index);
+      }
+    });
   }
 
-  @override Widget build(BuildContext context){
+  void printReceipt() {
+    if (cart.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cart is empty! Add items first.')),
+      );
+      return;
+    }
+
+    final dateStr = DateFormat('dd-MM-yyyy hh:mm a').format(DateTime.now());
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Receipt Preview (ESC/POS)'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Center(
+                child: Text(
+                  'TABLE BY KGN\nRestaurant & Cafe',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              const Divider(),
+              Text('Table: $selectedTable'),
+              Text('Date: $dateStr'),
+              const Divider(),
+              ...cart.map((i) => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${i.item.name} x${i.quantity}'),
+                      Text('₹${i.total.toStringAsFixed(0)}'),
+                    ],
+                  )),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Subtotal:'),
+                  Text('₹${subtotal.toStringAsFixed(0)}'),
+                ],
+              ),
+              if (discountPercentage > 0)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Discount (${discountPercentage.toStringAsFixed(0)}%):'),
+                    Text('-₹${discountAmount.toStringAsFixed(0)}'),
+                  ],
+                ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('GRAND TOTAL:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('₹${finalTotal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(),
+              const Center(child: Text('Thank You! Visit Again.')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() => cart.clear());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Bill Sent to Thermal Printer!')),
+              );
+            },
+            child: const Text('Print Bill'),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FF),
-      appBar: AppBar(backgroundColor: Colors.white, elevation: 0, title: Row(children: [
-        Container(width: 36, height: 32, color: Colors.orange, child: Center(child: Text("KGN", style: TextStyle(fontSize: 8, color: Colors.white)))),
-        SizedBox(width: 8),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text("New Order", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-          Text("KGN Tava Fry • Main Branch", style: TextStyle(color: Colors.grey, fontSize: 10))
-        ])
-      ])),
-      body: Column(children: [
-        Container(margin: EdgeInsets.all(10), padding: EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Column(children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            InkWell(onTap: showTableSheet, child: Container(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Color(0xFFDCE9FF), borderRadius: BorderRadius.circular(10)), child: Row(children: [Icon(Icons.table_restaurant, color: Color(0xFFA33900), size: 20), SizedBox(width: 8), Text("Table $selectedTable", style: TextStyle(fontWeight: FontWeight.bold)), Icon(Icons.expand_more, size: 18)]))),
-            Container(padding: EdgeInsets.all(2), decoration: BoxDecoration(color: Color(0xFFE5EEFF), borderRadius: BorderRadius.circular(8)), child: Row(children: [channelBtn("Dine-in","dine"), channelBtn("Takeaway","parcel"), channelBtn("Delivery","delivery")]))
-          ])
-        ])),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: TextField(onChanged: (v){ setState(()=>search=v); }, decoration: InputDecoration(hintText: "Search dishes...", prefixIcon: Icon(Icons.search), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)))),
-        SizedBox(height: 8),
-        SizedBox(height: 36, child: ListView.builder(scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(horizontal: 10), itemCount: cats.length, itemBuilder: (c,i)=> Padding(padding: EdgeInsets.only(right: 6), child: ChoiceChip(label: Text(cats[i], style: TextStyle(fontSize: 12)), selected: selectedCat==cats[i], selectedColor: Color(0xFFA33900), labelStyle: TextStyle(color: selectedCat==cats[i]? Colors.white: Colors.black), onSelected: (v){ setState(()=>selectedCat=cats[i]); })))),
-        SizedBox(height: 8),
-        Expanded(child: ListView.builder(padding: EdgeInsets.fromLTRB(10,0,10,140), itemCount: filtered.length, itemBuilder: (c,i){
-          var m=filtered[i];
-          bool added=(m["qty"] as int)>0;
-          return Container(margin: EdgeInsets.only(bottom: 8), padding: EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Row(children: [
-            Stack(children: [
-              ClipRRect(borderRadius: BorderRadius.circular(8), child: Container(width: 70, height: 70, color: Colors.grey.shade200, child: Image.network(m["img"], fit: BoxFit.cover, errorBuilder: (c,e,s)=> Icon(Icons.fastfood)))),
-              Positioned(top: 4, right: 4, child: Container(padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1), decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(4)), child: Text("₹${m["price"]}", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold))))
-            ]),
-            SizedBox(width: 10),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(m["name"], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(m["cat"], style: TextStyle(fontSize: 11, color: Colors.grey)),
-              Text("₹${m["price"]}${added? " × ${m["qty"]} = ₹${(m["price"] as int)*(m["qty"] as int)}":""}", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFA33900)))
-            ])),
-            added? Row(children: [
-              InkWell(onTap: (){ setState(()=> m["qty"]=(m["qty"] as int)-1); }, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white, border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(6)), child: Icon(Icons.remove, size: 16))),
-              Container(width: 28, child: Center(child: Text("${m["qty"]}", style: TextStyle(fontWeight: FontWeight.bold)))),
-              InkWell(onTap: (){ setState(()=> m["qty"]=(m["qty"] as int)+1); }, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Color(0xFFA33900), borderRadius: BorderRadius.circular(6)), child: Icon(Icons.add, size: 16, color: Colors.white))),
-            ]) : ElevatedButton(onPressed: (){ setState(()=> m["qty"]=1); }, style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFE5EEFF), elevation: 0), child: Text("Add", style: TextStyle(color: Color(0xFFA33900))))
-          ]));
-        })),
-      ]),
-      bottomSheet: totalItems>0? Container(padding: EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]), child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text("$totalItems Items ($totalQty Qty) • Total: ₹$totalAmount", style: TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: OutlinedButton.icon(onPressed: (){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("KOT Printed for $selectedTable"))); }, icon: Icon(Icons.print), label: Text("Print KOT"))),
-          SizedBox(width: 8),
-          Expanded(flex: 2, child: ElevatedButton.icon(onPressed: (){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Order Sent - $selectedTable - ₹$totalAmount"))); setState(()=>{ for(var m in menu) m["qty"]=0 }); }, icon: Icon(Icons.bolt), label: Text("Save & Punch"), style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFA33900), foregroundColor: Colors.white)))
-        ])
-      ])): null,
-      bottomNavigationBar: BottomNavigationBar(type: BottomNavigationBarType.fixed, selectedItemColor: Color(0xFFA33900), currentIndex: 1, items: [
-        BottomNavigationBarItem(icon: Icon(Icons.table_restaurant), label: "Tables"),
-        BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: "New Order"),
-        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Live KOT"),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: "Orders"),
-        BottomNavigationBarItem(icon: Icon(Icons.analytics), label: "Summary"),
-      ]),
+      appBar: AppBar(
+        title: const Text('Table by Kgn — POS Billing'),
+        backgroundColor: Colors.deepOrange,
+        foregroundColor: Colors.white,
+      ),
+      body: Row(
+        children: [
+          // LEFT SIDE: Menu & Tables Panel
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAlignment.start,
+                children: [
+                  // Table Selector
+                  const Text('Select Table:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 45,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: tables.length,
+                      itemBuilder: (context, index) {
+                        final isSelected = selectedTable == tables[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: Text(tables[index]),
+                            selected: isSelected,
+                            selectedColor: Colors.deepOrange,
+                            labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                            onSelected: (val) {
+                              setState(() => selectedTable = tables[index]);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 25),
+                  // Menu Grid
+                  const Text('Menu Items:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: 1.2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: menuItems.length,
+                      itemBuilder: (context, index) {
+                        final item = menuItems[index];
+                        return InkWell(
+                          onTap: () => addToCart(item),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.deepOrange.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.deepOrange.shade200),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  item.name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  '₹${item.price.toStringAsFixed(0)}',
+                                  style: TextStyle(color: Colors.deepOrange.shade900, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const VerticalDivider(width: 1),
+
+          // RIGHT SIDE: Order Cart & Billing Summary
+          Expanded(
+            flex: 2,
+            child: Container(
+              color: Colors.grey.shade50,
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Current Order ($selectedTable)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      TextButton(
+                        onPressed: () => setState(() => cart.clear()),
+                        child: const Text('Clear', style: TextStyle(color: Colors.red)),
+                      )
+                    ],
+                  ),
+                  const Divider(),
+                  // Cart Item List
+                  Expanded(
+                    child: cart.isEmpty
+                        ? const Center(child: Text('No items added to cart'))
+                        : ListView.builder(
+                            itemCount: cart.length,
+                            itemBuilder: (context, index) {
+                              final item = cart[index];
+                              return Card(
+                                elevation: 0,
+                                color: Colors.white,
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAlignment.start,
+                                          children: [
+                                            Text(item.item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                            Text('₹${item.item.price.toStringAsFixed(0)} each'),
+                                          ],
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove_circle_outline, size: 20),
+                                            onPressed: () => updateQuantity(index, -1),
+                                          ),
+                                          Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          IconButton(
+                                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                                            onPressed: () => updateQuantity(index, 1),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        width: 50,
+                                        child: Text(
+                                          '₹${item.total.toStringAsFixed(0)}',
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const Divider(),
+                  // Discount Slider / Input
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Discount (%):'),
+                      DropdownButton<double>(
+                        value: discountPercentage,
+                        items: [0.0, 5.0, 10.0, 15.0, 20.0].map((double val) {
+                          return DropdownMenuItem<double>(
+                            value: val,
+                            child: Text('${val.toStringAsFixed(0)}%'),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => discountPercentage = val);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Bill Summary
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Subtotal:'),
+                      Text('₹${subtotal.toStringAsFixed(0)}'),
+                    ],
+                  ),
+                  if (discountPercentage > 0)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Discount Amount:'),
+                        Text('-₹${discountAmount.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green)),
+                      ],
+                    ),
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Bill:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        '₹${finalTotal.toStringAsFixed(0)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.deepOrange),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: printReceipt,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('PRINT BILL', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
