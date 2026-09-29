@@ -1,13 +1,14 @@
 name: kgn_tava_fry
-description: Table by KGN Tava Fry - Smart billing KOT & order tracking
+description: TABLE by KGN Tava Fry - PRO with Butter, History, Voice
 publish_to: 'none'
-version: 1.0.0+52
+version: 1.0.0+60
 environment:
   sdk: '^3.4.0'
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  flutter_tts: ^4.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
