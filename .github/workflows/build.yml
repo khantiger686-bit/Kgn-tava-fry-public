@@ -15,8 +15,12 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-      - run: rm -rf android
       - run: flutter create --project-name kgn_tava_fry --platforms android .
+      - name: Fix minSdkVersion for TTS Voice
+        run: |
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 16/minSdkVersion 24/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
