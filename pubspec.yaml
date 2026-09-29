@@ -1,20 +1,15 @@
 name: kgn_tava_fry
-description: KGN Tava Fry - Table App with 59 Items
+description: Table by KGN Tava Fry - Smart billing KOT & order tracking
 publish_to: 'none'
 version: 1.0.0+52
-
 environment:
   sdk: '^3.4.0'
-
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-
 flutter:
   uses-material-design: true
