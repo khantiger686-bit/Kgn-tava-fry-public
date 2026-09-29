@@ -1,34 +1,20 @@
-name: Build KGN APK
-on:
-  push:
-    branches: [ main ]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
-      - run: flutter create --project-name kgn_tava_fry --platforms android .
-      - name: Force minSdk 24 for TTS
-        run: |
-          echo "--- BEFORE ---"
-          grep -rn "minSdk" android/app/ || true
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk = .*/minSdk = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/g' android/app/build.gradle.kts || true
-          sed -i 's/minSdk = .*/minSdk = 24/g' android/app/build.gradle.kts || true
-          echo "--- AFTER ---"
-          grep -rn "minSdk" android/app/ || true
-      - run: flutter pub get
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+name: kgn_tava_fry
+description: KGN Tava Fry - Hotel Management
+publish_to: 'none'
+version: 1.0.0+60
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_tts: ^4.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
