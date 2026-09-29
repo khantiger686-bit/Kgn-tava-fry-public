@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-void main()=>runApp(MaterialApp(debugShowCheckedModeBanner:false, home:TableListScreen()));
-class TableListScreen extends StatefulWidget{ @override State<TableListScreen> createState()=>_TableListScreenState();}
-class _TableListScreenState extends State<TableListScreen>{
-  List<Map<String,dynamic>> tables = List.generate(6, (i)=>{"id":i+1,"name":"T-${i+1}","status":"Empty","amount":0,"pax":2,"items":[]});
+void main()=>runApp(MaterialApp(debugShowCheckedModeBanner:false, home:MainApp()));
+
+class MainApp extends StatefulWidget{ @override State<MainApp> createState()=>_MainAppState();}
+class _MainAppState extends State<MainApp>{
+  int idx=0;
+  List<Map<String,dynamic>> tables = List.generate(6, (i)=>{"id":i+1,"name":"T-${i+1}","status":"Empty","amount":0,"pax":2,"items":[],"time":""});
+
   @override Widget build(BuildContext context){
+    List<Widget> pages=[
+      TableGrid(tables:tables, onTapTable:(i){Navigator.push(context, MaterialPageRoute(builder:(_)=>OrderScreen(table:tables[i], onSave:(u){setState(()=>tables[i]=u);}))).then((_)=>setState((){}));}),
+      NewOrderQuick(tables:tables, onSelect:(i){setState(()=>idx=0); Navigator.push(context, MaterialPageRoute(builder:(_)=>OrderScreen(table:tables[i], onSave:(u){setState(()=>tables[i]=u);}))).then((_)=>setState((){}));}),
+      KOTScreen(tables:tables),
+      OrdersScreen(tables:tables, onClear:(i){setState((){tables[i]={"id":i+1,"name":"T-${i+1}","status":"Empty","amount":0,"pax":2,"items":[],"time":""};});}),
+      SummaryScreen(tables:tables),
+    ];
     return Scaffold(
       backgroundColor:Color(0xFFF8F9FF),
-      appBar:AppBar(title:Text("TABLE by KGN Tava Fry"), backgroundColor:Color(0xFFA33900), foregroundColor:Colors.white),
-      body:GridView.builder(padding:EdgeInsets.all(12), gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2, crossAxisSpacing:12, mainAxisSpacing:12, childAspectRatio:1.2), itemCount:6, itemBuilder:(c,i){
-          var t=tables[i];
-          Color col = t["status"]=="Empty"?Colors.green.shade100:Colors.red.shade100;
-          return InkWell(onTap:(){Navigator.push(context, MaterialPageRoute(builder:(_)=>OrderScreen(table:t, onSave:(u){setState(()=>tables[i]=u);}))).then((_)=>setState((){}));}, child:Container(decoration:BoxDecoration(color:col, borderRadius:BorderRadius.circular(16)), padding:EdgeInsets.all(12), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
-            Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text(t["name"], style:TextStyle(fontSize:22, fontWeight:FontWeight.bold)), Icon(Icons.table_restaurant)]),
-            Text(t["status"], style:TextStyle(fontWeight:FontWeight.bold)),
-            Spacer(),
-            if(t["amount"]>0) Text("Rs ${t["amount"]}", style:TextStyle(fontWeight:FontWeight.bold, fontSize:18)),
-            Text("${t["pax"]} PAX | ${t["items"].length} Items", style:TextStyle(fontSize:11))
-          ])));
-      }),
-      bottomNavigationBar:BottomNavigationBar(selectedItemColor:Color(0xFFA33900), type:BottomNavigationBarType.fixed, items:[
+      appBar:AppBar(title:Text(idx==0?"TABLE by KGN Tava Fry":idx==1?"New Order":idx==2?"Live KOT":idx==3?"All Orders":"Business Summary"), backgroundColor:Color(0xFFA33900), foregroundColor:Colors.white),
+      body:pages[idx],
+      bottomNavigationBar:BottomNavigationBar(currentIndex:idx, onTap:(i)=>setState(()=>idx=i), selectedItemColor:Color(0xFFA33900), unselectedItemColor:Colors.grey, type:BottomNavigationBarType.fixed, items:[
         BottomNavigationBarItem(icon:Icon(Icons.table_restaurant), label:"Tables"),
         BottomNavigationBarItem(icon:Icon(Icons.add_circle), label:"New"),
         BottomNavigationBarItem(icon:Icon(Icons.restaurant_menu), label:"KOT"),
@@ -28,6 +28,95 @@ class _TableListScreenState extends State<TableListScreen>{
     );
   }
 }
+
+class TableGrid extends StatelessWidget{
+  final List<Map<String,dynamic>> tables;
+  final Function(int) onTapTable;
+  TableGrid({required this.tables, required this.onTapTable});
+  @override Widget build(BuildContext context){
+    return GridView.builder(padding:EdgeInsets.all(12), gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2, crossAxisSpacing:12, mainAxisSpacing:12, childAspectRatio:1.2), itemCount:6, itemBuilder:(c,i){
+      var t=tables[i];
+      Color col = t["status"]=="Empty"?Colors.green.shade100:Colors.red.shade100;
+      return InkWell(onTap:()=>onTapTable(i), child:Container(decoration:BoxDecoration(color:col, borderRadius:BorderRadius.circular(16)), padding:EdgeInsets.all(12), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
+        Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text(t["name"], style:TextStyle(fontSize:22, fontWeight:FontWeight.bold)), Icon(Icons.table_restaurant)]),
+        Text(t["status"], style:TextStyle(fontWeight:FontWeight.bold, color:t["status"]=="Empty"?Colors.green:Colors.red)),
+        Spacer(),
+        if(t["amount"]>0) Text("Rs ${t["amount"]}", style:TextStyle(fontWeight:FontWeight.bold, fontSize:18, color:Color(0xFFA33900))),
+        Text("${t["pax"]} PAX | ${t["items"].length} Items", style:TextStyle(fontSize:11)),
+        if(t["time"]!="") Text(t["time"], style:TextStyle(fontSize:9, color:Colors.grey)),
+      ])));
+    });
+  }
+}
+
+class NewOrderQuick extends StatelessWidget{
+  final List<Map<String,dynamic>> tables;
+  final Function(int) onSelect;
+  NewOrderQuick({required this.tables, required this.onSelect});
+  @override Widget build(BuildContext context){
+    return ListView.builder(padding:EdgeInsets.all(12), itemCount:6, itemBuilder:(c,i){
+      var t=tables[i];
+      return Card(child:ListTile(leading:CircleAvatar(backgroundColor:t["status"]=="Empty"?Colors.green:Colors.red, child:Text(t["name"], style:TextStyle(color:Colors.white))), title:Text("Table ${t["name"]} - ${t["status"]}"), subtitle:Text(t["status"]=="Empty"?"Tap to take new order":"${t["items"].length} items - Rs ${t["amount"]}"), trailing:ElevatedButton(onPressed:()=>onSelect(i), child:Text(t["status"]=="Empty"?"New Order":"Add More")),));
+    });
+  }
+}
+
+class KOTScreen extends StatelessWidget{
+  final List<Map<String,dynamic>> tables;
+  KOTScreen({required this.tables});
+  @override Widget build(BuildContext context){
+    var live = tables.where((t)=>t["status"]=="Occupied").toList();
+    if(live.isEmpty) return Center(child:Column(mainAxisAlignment:MainAxisAlignment.center, children:[Icon(Icons.restaurant_menu, size:60, color:Colors.grey), SizedBox(height:10), Text("No Live KOT", style:TextStyle(color:Colors.grey))]));
+    return ListView.builder(padding:EdgeInsets.all(12), itemCount:live.length, itemBuilder:(c,i){
+      var t=live[i];
+      return Card(color:Color(0xFFFFF3E0), child:Padding(padding:EdgeInsets.all(12), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
+        Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text("${t["name"]} - KOT", style:TextStyle(fontWeight:FontWeight.bold, color:Color(0xFFA33900))), Text(t["time"], style:TextStyle(fontSize:11))]),
+        Divider(),
+       ...List.generate(t["items"].length, (j){var it=t["items"][j]; return Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text("${it["qty"]} x ${it["name"]} (${it["half"]?"HALF":"FULL"})"), Text("Rs ${it["half"]?it["h"]:it["f"]}")]);}),
+        Divider(),
+        Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text("Total Rs ${t["amount"]}", style:TextStyle(fontWeight:FontWeight.bold)), Container(padding:EdgeInsets.symmetric(horizontal:8,vertical:2), decoration:BoxDecoration(color:Colors.green, borderRadius:BorderRadius.circular(10)), child:Text("IN KITCHEN", style:TextStyle(color:Colors.white, fontSize:10)))]),
+      ])));
+    });
+  }
+}
+
+class OrdersScreen extends StatelessWidget{
+  final List<Map<String,dynamic>> tables;
+  final Function(int) onClear;
+  OrdersScreen({required this.tables, required this.onClear});
+  @override Widget build(BuildContext context){
+    var occ = tables.where((t)=>t["status"]=="Occupied").toList();
+    if(occ.isEmpty) return Center(child:Text("No active orders"));
+    return ListView.builder(padding:EdgeInsets.all(12), itemCount:occ.length, itemBuilder:(c,i){
+      var t=occ[i];
+      int realIdx = tables.indexWhere((e)=>e["name"]==t["name"]);
+      return Card(child:ListTile(title:Text("${t["name"]} - Rs ${t["amount"]}"), subtitle:Text("${t["items"].length} items • ${t["time"]}"), trailing:Row(mainAxisSize:MainAxisSize.min, children:[IconButton(icon:Icon(Icons.print), onPressed:(){}), IconButton(icon:Icon(Icons.check_circle, color:Colors.green), onPressed:(){showDialog(context:context, builder:(_)=>AlertDialog(title:Text("Bill Paid?"), content:Text("Clear ${t["name"]} bill of Rs ${t["amount"]}?"), actions:[TextButton(onPressed:()=>Navigator.pop(context), child:Text("No")), ElevatedButton(onPressed:(){onClear(realIdx); Navigator.pop(context);}, child:Text("Yes, Paid"))]));})])));
+    });
+  }
+}
+
+class SummaryScreen extends StatelessWidget{
+  final List<Map<String,dynamic>> tables;
+  SummaryScreen({required this.tables});
+  @override Widget build(BuildContext context){
+    int totalSale = tables.fold(0, (a,b)=>a+(b["amount"] as int));
+    int occ = tables.where((t)=>t["status"]=="Occupied").length;
+    return Padding(padding:EdgeInsets.all(16), child:Column(children:[
+      Row(children:[
+        Expanded(child:Container(padding:EdgeInsets.all(16), decoration:BoxDecoration(color:Color(0xFFA33900), borderRadius:BorderRadius.circular(12)), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[Text("Today Sale", style:TextStyle(color:Colors.white70)), SizedBox(height:4), Text("Rs $totalSale", style:TextStyle(color:Colors.white, fontSize:24, fontWeight:FontWeight.bold)), Text("No GST", style:TextStyle(color:Colors.white70, fontSize:11))]))),
+        SizedBox(width:12),
+        Expanded(child:Container(padding:EdgeInsets.all(16), decoration:BoxDecoration(color:Colors.white, borderRadius:BorderRadius.circular(12)), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[Text("Tables", style:TextStyle(color:Colors.grey)), SizedBox(height:4), Text("$occ / 6 Occupied", style:TextStyle(fontSize:18, fontWeight:FontWeight.bold)), Text("${6-occ} Empty", style:TextStyle(color:Colors.green))]))),
+      ]),
+      SizedBox(height:16),
+      Container(width:double.infinity, padding:EdgeInsets.all(16), decoration:BoxDecoration(color:Colors.white, borderRadius:BorderRadius.circular(12)), child:Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
+        Text("Why Choose Table by KGN?", style:TextStyle(fontWeight:FontWeight.bold)),
+        SizedBox(height:8),
+        Text("• Fast Billing • Smart KOT • Table Management\n• Waiter App • Printer Support • No GST\n• Designed for Indian Restaurants", style:TextStyle(fontSize:13, color:Colors.grey.shade700)),
+      ]))
+    ]));
+  }
+}
+
 class OrderScreen extends StatefulWidget{
   final Map<String,dynamic> table;
   final Function(Map<String,dynamic>) onSave;
@@ -101,6 +190,12 @@ class _OrderScreenState extends State<OrderScreen>{
       {"id":58,"name":"Chapati Roti","h":7,"f":7,"cat":"Roti","qty":0,"half":false,"t":"v"},
       {"id":59,"name":"Papad Fry","h":10,"f":10,"cat":"Roti","qty":0,"half":false,"t":"v"},
     ];
+    if(widget.table["items"]!=null && (widget.table["items"] as List).isNotEmpty){
+      for(var old in widget.table["items"]){
+        var idx=menu.indexWhere((m)=>m["id"]==old["id"]);
+        if(idx!=-1){menu[idx]["qty"]=old["qty"]; menu[idx]["half"]=old["half"];}
+      }
+    }
   }
   List get filtered=>menu.where((m){bool c1=cat=="All"||m["cat"]==cat; bool c2=m["name"].toString().toLowerCase().contains(search.toLowerCase()); return c1&&c2;}).toList();
   int get total=>menu.fold(0,(a,b){int pr=b["half"]?b["h"]:b["f"]; return a+pr*(b["qty"] as int);});
@@ -122,7 +217,7 @@ class _OrderScreenState extends State<OrderScreen>{
             trailing:m["qty"]>0?Row(mainAxisSize:MainAxisSize.min, children:[IconButton(icon:Icon(Icons.remove), onPressed:()=>setState(()=>m["qty"]--)), Text("${m["qty"]}"), IconButton(icon:Icon(Icons.add), onPressed:()=>setState(()=>m["qty"]++))]):ElevatedButton(onPressed:()=>setState(()=>m["qty"]=1), child:Text("Add")),
           ));
         })),
-        if(total>0) Container(padding:EdgeInsets.all(12), color:Colors.white, child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text("Total = Rs $total", style:TextStyle(fontWeight:FontWeight.bold, fontSize:16, color:Color(0xFFA33900))), ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Color(0xFFA33900), foregroundColor:Colors.white), onPressed:(){widget.table["items"]=menu.where((m)=>m["qty"]>0).toList(); widget.table["amount"]=total; widget.table["status"]=total>0?"Occupied":"Empty"; widget.onSave(widget.table); Navigator.pop(context);}, child:Text("Save KOT"))]))
+        if(total>0) Container(padding:EdgeInsets.all(12), color:Colors.white, child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, children:[Text("Total = Rs $total", style:TextStyle(fontWeight:FontWeight.bold, fontSize:16, color:Color(0xFFA33900))), ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Color(0xFFA33900), foregroundColor:Colors.white), onPressed:(){widget.table["items"]=menu.where((m)=>m["qty"]>0).toList(); widget.table["amount"]=total; widget.table["status"]=total>0?"Occupied":"Empty"; widget.table["time"]="${DateTime.now().hour}:${DateTime.now().minute}"; widget.onSave(widget.table); Navigator.pop(context);}, child:Text("Save KOT"))]))
       ]),
     );
   }
