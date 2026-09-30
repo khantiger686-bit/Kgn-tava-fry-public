@@ -16,10 +16,18 @@ jobs:
           flutter-version: '3.22.0'
           channel: 'stable'
       - run: flutter create --project-name kgn_tava_fry --platforms android .
-      - name: Force minSdk 24 for TTS
+      - name: Fix Kotlin and SDK
         run: |
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk = .*/minSdk = 24/g' android/app/build.gradle || true
+          # Update Kotlin in all gradle files
+          find android -type f -name "*.gradle" -exec sed -i "s/1\.7\.10/1.9.22/g; s/1\.7\.1/1.9.22/g; s/1\.8\.10/1.9.22/g; s/1\.8\.22/1.9.22/g" {} \; || true
+          find android -type f -name "*.gradle.kts" -exec sed -i "s/1\.7\.10/1.9.22/g; s/1\.7\.1/1.9.22/g; s/1\.8\.10/1.9.22/g; s/1\.8\.22/1.9.22/g" {} \; || true
+          sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/g" android/build.gradle || true
+          sed -i "s/minSdk = .*/minSdk = 24/g" android/app/build.gradle || true
+          sed -i "s/minSdkVersion .*/minSdkVersion 24/g" android/app/build.gradle || true
+          sed -i "s/compileSdk = .*/compileSdk = 34/g" android/app/build.gradle || true
+          sed -i "s/compileSdkVersion .*/compileSdkVersion 34/g" android/app/build.gradle || true
+          echo "--- Fixed Files ---"
+          grep -R "kotlin" android --include="*.gradle" --include="*.kts" | head -20 || true
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
