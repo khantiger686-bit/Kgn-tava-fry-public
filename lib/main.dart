@@ -1,276 +1,394 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(const KgnApp());
-
-class Item {
-  final String name;
-  final String category;
-  final int half;
-  final int full;
-
-  const Item(this.name, this.category, this.half, this.full);
+void main() {
+  runApp(const KgnTavaFryApp());
 }
 
-const items = <Item>[
-  Item('Murgh Do Pyaza', 'Chicken', 160, 300),
-  Item('Murgh Mughlai', 'Chicken', 170, 320),
-  Item('Chicken Handi', 'Chicken', 160, 300),
-  Item('Chicken Peshawar', 'Chicken', 170, 320),
-  Item('Shahi Chicken', 'Chicken', 170, 320),
-  Item('Malai Tikka', 'Chicken', 180, 350),
-  Item('Tikka Masala', 'Chicken', 170, 320),
-  Item('Karahi', 'Chicken', 160, 300),
-  Item('Garlic Chicken', 'Chicken', 160, 300),
-  Item('Chicken India', 'Chicken', 250, 450),
-  Item('Butter Chicken Boneless', 'Chicken', 170, 320),
-  Item('White Chicken', 'Chicken', 180, 350),
-  Item('Green Chicken', 'Chicken', 180, 350),
-  Item('Chicken Fry', 'Chicken', 120, 220),
-  Item('Chicken Masala', 'Chicken', 120, 220),
-  Item('Biryani', 'Chicken', 80, 120),
-  Item('Tandoori Masala', 'Chicken', 250, 480),
-  Item('Ahmedabad Masala', 'Chicken', 160, 320),
-  Item('Tikka Rice', 'Chicken', 170, 320),
-
-  Item('Mughlai Mutton', 'Mutton', 150, 280),
-  Item('Dalbati Gos', 'Mutton', 150, 280),
-  Item('White Mutton', 'Mutton', 160, 300),
-  Item('Green Mutton', 'Mutton', 150, 280),
-  Item('Mutton Kurma', 'Mutton', 160, 300),
-  Item('Mutton Fry', 'Mutton', 120, 220),
-  Item('Mutton Masala', 'Mutton', 120, 220),
-  Item('Kaleji Masala', 'Mutton', 120, 220),
-  Item('Bhaji Gos', 'Mutton', 130, 240),
-  Item('Paya Fry', 'Mutton', 120, 220),
-
-  Item('Chaap Fry', 'Fish', 120, 220),
-  Item('Bheja Fry', 'Fish', 130, 240),
-  Item('Boti Masala', 'Fish', 120, 220),
-  Item('Kheema Fry', 'Fish', 80, 160),
-  Item('Kheema Pulao', 'Fish', 100, 180),
-  Item('Fish Fry', 'Fish', 80, 160),
-  Item('Fish Kadhi', 'Fish', 100, 200),
-  Item('Zinga Fry', 'Fish', 130, 240),
-  Item('Zinga Rice', 'Fish', 170, 320),
-
-  Item('Anda Kadhi', 'Egg', 80, 160),
-  Item('Anda Kheema', 'Egg', 80, 160),
-  Item('Anda Bhurji', 'Egg', 50, 100),
-  Item('Anda Pulao', 'Egg', 60, 120),
-
-  Item('Dal Tadka', 'Veg', 70, 140),
-  Item('Dal Gotala', 'Veg', 80, 160),
-  Item('Butter Dal Fry', 'Veg', 70, 140),
-  Item('Dal Fry', 'Veg', 50, 100),
-  Item('Sabji Fry', 'Veg', 50, 100),
-  Item('Sev Tomato', 'Veg', 50, 100),
-  Item('Masala Rice', 'Veg', 50, 100),
-  Item('Jeera Rice', 'Veg', 50, 100),
-  Item('Kadhi Khichdi', 'Veg', 30, 60),
-  Item('Dal Palak', 'Veg', 50, 100),
-  Item('Plain Rice', 'Veg', 50, 100),
-
-  Item('Special Roti', 'Roti', 15, 15),
-  Item('Special Paratha', 'Roti', 20, 20),
-  Item('Butter Roti', 'Roti', 15, 15),
-  Item('Chapati Roti', 'Roti', 7, 7),
-  Item('Papad Fry', 'Roti', 10, 10),
-
-  Item('Chicken Tandoori', 'Starter', 180, 350),
-  Item('Chicken Leg Piece', 'Starter', 100, 100),
-  Item('Chicken Lollipop', 'Starter', 50, 50),
-  Item('Chicken Tikka Stick', 'Starter', 10, 10),
-  Item('Chicken Crispy', 'Starter', 20, 20),
-  Item('Chicken Hyderabadi', 'Starter', 20, 20),
-  Item('Chicken Cutlets', 'Starter', 10, 10),
-  Item('Chicken Egg Kabab', 'Starter', 10, 10),
-  Item('Mutton Seekh Kabab', 'Starter', 10, 10),
-  Item('Mutton Boti Kabab', 'Starter', 10, 10),
-  Item('Chicken Dana Small', 'Starter', 50, 50),
-  Item('Chicken Dana Large', 'Starter', 100, 100),
-];
-
-class CartLine {
-  final Item item;
-  final bool full;
-  int qty;
-
-  CartLine(this.item, this.full, this.qty);
-
-  int get total => (full ? item.full : item.half) * qty;
-}
-
-class KgnApp extends StatelessWidget {
-  const KgnApp({super.key});
+class KgnTavaFryApp extends StatelessWidget {
+  const KgnTavaFryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'KGN TAWA FRY',
+      title: 'KGN TAVA FRY',
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.deepOrange,
+        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       ),
-      home: const Home(),
+      home: const LoginPage(),
     );
   }
 }
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+/* =========================
+   LOGIN
+========================= */
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _HomeState extends State<Home> {
-  int tab = 0;
+class _LoginPageState extends State<LoginPage> {
+  final userController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  final List<String> tables =
-      List.generate(12, (index) => 'T${index + 1}');
+  @override
+  void dispose() {
+    userController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
-  final Set<String> occupied = {};
-  final List<Map<String, dynamic>> orders = [];
-
-  int orderNo = 1;
-
-  void newOrder(
-    String type,
-    String table,
-    List<CartLine> cart,
-  ) {
-    setState(() {
-      orders.insert(0, {
-        'no': orderNo++,
-        'type': type,
-        'table': table,
-        'items': List<CartLine>.from(cart),
-        'paid': false,
-      });
-
-      if (table != 'Takeaway') {
-        occupied.add(table);
-      }
-    });
+  void login() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const DashboardPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
-      Dashboard(
-        orders: orders,
-        occupied: occupied,
-        onBill: () => setState(() => tab = 1),
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 42,
+                    child: Icon(Icons.restaurant, size: 42),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'KGN TAVA FRY',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text('Restaurant Billing & KOT'),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: userController,
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: login,
+                      icon: const Icon(Icons.login),
+                      label: const Text('LOGIN'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      Billing(
-        onSave: newOrder,
-        tables: tables,
-      ),
-      Kots(
-        orders: orders,
-        onPaid: (order) {
-          setState(() {
-            order['paid'] = true;
+    );
+  }
+}
 
-            if (order['table'] != 'Takeaway') {
-              occupied.remove(order['table']);
-            }
+/* =========================
+   MODELS
+========================= */
+
+class MenuItemModel {
+  String name;
+  double price;
+  String category;
+
+  MenuItemModel({
+    required this.name,
+    required this.price,
+    required this.category,
+  });
+}
+
+class OrderLine {
+  MenuItemModel item;
+  int quantity;
+
+  OrderLine({
+    required this.item,
+    this.quantity = 1,
+  });
+
+  double get total => item.price * quantity;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  int selectedIndex = 0;
+
+  final List<MenuItemModel> menu = [
+    MenuItemModel(
+      name: 'Chicken Tawa',
+      price: 220,
+      category: 'Non-Veg',
+    ),
+    MenuItemModel(
+      name: 'Chicken Fry',
+      price: 180,
+      category: 'Non-Veg',
+    ),
+    MenuItemModel(
+      name: 'Chicken Biryani',
+      price: 190,
+      category: 'Biryani',
+    ),
+    MenuItemModel(
+      name: 'Mutton Tawa',
+      price: 320,
+      category: 'Non-Veg',
+    ),
+    MenuItemModel(
+      name: 'Paneer Tawa',
+      price: 180,
+      category: 'Veg',
+    ),
+    MenuItemModel(
+      name: 'Paneer Butter Masala',
+      price: 170,
+      category: 'Veg',
+    ),
+    MenuItemModel(
+      name: 'Tandoori Roti',
+      price: 20,
+      category: 'Roti',
+    ),
+    MenuItemModel(
+      name: 'Butter Naan',
+      price: 45,
+      category: 'Roti',
+    ),
+    MenuItemModel(
+      name: 'Cold Drink',
+      price: 40,
+      category: 'Drinks',
+    ),
+  ];
+
+  final List<OrderLine> currentOrder = [];
+
+  final List<String> tables = [
+    'Table 1',
+    'Table 2',
+    'Table 3',
+    'Table 4',
+    'Table 5',
+    'Table 6',
+    'Table 7',
+    'Table 8',
+  ];
+
+  double totalSales = 0;
+  int completedBills = 0;
+  double expenses = 0;
+
+  String orderType = 'Dine-In';
+
+  void addItem(MenuItemModel item) {
+    setState(() {
+      final index =
+          currentOrder.indexWhere((element) => element.item.name == item.name);
+
+      if (index >= 0) {
+        currentOrder[index].quantity++;
+      } else {
+        currentOrder.add(OrderLine(item: item));
+      }
+    });
+  }
+
+  void removeItem(int index) {
+    setState(() {
+      if (currentOrder[index].quantity > 1) {
+        currentOrder[index].quantity--;
+      } else {
+        currentOrder.removeAt(index);
+      }
+    });
+  }
+
+  double get orderTotal {
+    double total = 0;
+
+    for (final line in currentOrder) {
+      total += line.total;
+    }
+
+    return total;
+  }
+
+  void saveBill() {
+    if (currentOrder.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pehle item add karo')),
+      );
+      return;
+    }
+
+    setState(() {
+      totalSales += orderTotal;
+      completedBills++;
+      currentOrder.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Bill saved successfully'),
+      ),
+    );
+  }
+
+  void sendKOT() {
+    if (currentOrder.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('KOT ke liye item add karo')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('KOT kitchen ko bhej diya'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = [
+      HomePage(
+        totalSales: totalSales,
+        completedBills: completedBills,
+        expenses: expenses,
+        onBilling: () {
+          setState(() {
+            selectedIndex = 1;
+          });
+        },
+        onTables: () {
+          setState(() {
+            selectedIndex = 2;
           });
         },
       ),
-      Tables(
-        tables: tables,
-        occupied: occupied,
+      BillingPage(
+        menu: menu,
+        currentOrder: currentOrder,
+        orderTotal: orderTotal,
+        orderType: orderType,
+        onOrderTypeChanged: (value) {
+          setState(() {
+            orderType = value;
+          });
+        },
+        onAdd: addItem,
+        onRemove: removeItem,
+        onSave: saveBill,
+        onKOT: sendKOT,
       ),
-      const MenuPage(),
-      Reports(orders: orders),
-      const Expenses(),
-      const SettingsPage(),
+      TablesPage(tables: tables),
+      MenuPage(
+        menu: menu,
+        onChanged: () {
+          setState(() {});
+        },
+      ),
+      ReportsPage(
+        totalSales: totalSales,
+        completedBills: completedBills,
+        expenses: expenses,
+      ),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'KGN TAWA FRY',
+          'KGN TAVA FRY',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                selectedIndex = 4;
+              });
+            },
+            icon: const Icon(Icons.bar_chart),
+          ),
+        ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.deepOrange,
-              ),
-              child: Text(
-                'KGN TAWA FRY\nBilling • KOT • Orders',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ...[
-              'Dashboard',
-              'Billing',
-              'KOT Management',
-              'Tables',
-              'Menu',
-              'Reports',
-              'Expenses',
-              'Settings',
-            ].asMap().entries.map(
-              (entry) {
-                final icons = [
-                  Icons.dashboard,
-                  Icons.receipt_long,
-                  Icons.soup_kitchen,
-                  Icons.table_restaurant,
-                  Icons.restaurant_menu,
-                  Icons.bar_chart,
-                  Icons.money_off,
-                  Icons.settings,
-                ];
-
-                return ListTile(
-                  leading: Icon(icons[entry.key]),
-                  title: Text(entry.value),
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() => tab = entry.key);
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: pages[tab],
+      body: pages[selectedIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: tab > 3 ? 0 : tab,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() => tab = index);
+          setState(() {
+            selectedIndex = index;
+          });
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long),
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
             label: 'Billing',
           ),
           NavigationDestination(
-            icon: Icon(Icons.soup_kitchen),
-            label: 'KOT',
+            icon: Icon(Icons.table_restaurant_outlined),
+            selectedIcon: Icon(Icons.table_restaurant),
+            label: 'Tables',
           ),
           NavigationDestination(
-            icon: Icon(Icons.table_restaurant),
-            label: 'Tables',
+            icon: Icon(Icons.restaurant_menu_outlined),
+            selectedIcon: Icon(Icons.restaurant_menu),
+            label: 'Menu',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.analytics_outlined),
+            selectedIcon: Icon(Icons.analytics),
+            label: 'Reports',
           ),
         ],
       ),
@@ -278,145 +396,143 @@ class _HomeState extends State<Home> {
   }
 }
 
-class Dashboard extends StatelessWidget {
-  final List<Map<String, dynamic>> orders;
-  final Set<String> occupied;
-  final VoidCallback onBill;
+/* =========================
+   HOME
+========================= */
 
-  const Dashboard({
+class HomePage extends StatelessWidget {
+  final double totalSales;
+  final int completedBills;
+  final double expenses;
+  final VoidCallback onBilling;
+  final VoidCallback onTables;
+
+  const HomePage({
     super.key,
-    required this.orders,
-    required this.occupied,
-    required this.onBill,
+    required this.totalSales,
+    required this.completedBills,
+    required this.expenses,
+    required this.onBilling,
+    required this.onTables,
   });
 
   @override
   Widget build(BuildContext context) {
-    int sales = 0;
-
-    for (final order in orders) {
-      if (order['paid'] == true) {
-        for (final item in order['items'] as List<CartLine>) {
-          sales += item.total;
-        }
-      }
-    }
-
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'आज का Dashboard',
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Restaurant Dashboard',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-
-        Row(
-          children: [
-            Expanded(
-              child: dashboardCard(
-                'Sales',
-                '₹$sales',
-                Icons.currency_rupee,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: dashboardCard(
-                'Pending KOT',
-                '${orders.where((o) => o['paid'] != true).length}',
-                Icons.soup_kitchen,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 10),
-
-        Row(
-          children: [
-            Expanded(
-              child: dashboardCard(
-                'Occupied',
-                '${occupied.length}',
-                Icons.table_restaurant,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: dashboardCard(
-                'Orders',
-                '${orders.length}',
-                Icons.receipt_long,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 15),
-
-        FilledButton.icon(
-          onPressed: onBill,
-          icon: const Icon(Icons.add),
-          label: const Text('New Bill'),
-        ),
-
-        const SizedBox(height: 15),
-
-        const Text(
-          'Recent Orders',
-          style: TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        ...orders.take(8).map(
-          (order) {
-            return Card(
-              child: ListTile(
-                title: Text(
-                  'Order #${order['no']} • ${order['type']}',
-                ),
-                subtitle: Text(
-                  '${order['table']} • '
-                  '${(order['items'] as List).length} items • '
-                  '${order['paid'] ? 'Paid' : 'KOT Pending'}',
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  title: 'Today Sales',
+                  value: '₹${totalSales.toStringAsFixed(0)}',
+                  icon: Icons.currency_rupee,
                 ),
               ),
-            );
-          },
-        ),
-      ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatCard(
+                  title: 'Bills',
+                  value: '$completedBills',
+                  icon: Icons.receipt,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  title: 'Expenses',
+                  value: '₹${expenses.toStringAsFixed(0)}',
+                  icon: Icons.money_off,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: StatCard(
+                  title: 'GST',
+                  value: 'No GST',
+                  icon: Icons.percent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ActionTile(
+            icon: Icons.add_shopping_cart,
+            title: 'New Bill',
+            subtitle: 'Create a new restaurant bill',
+            onTap: onBilling,
+          ),
+          ActionTile(
+            icon: Icons.table_restaurant,
+            title: 'Table Management',
+            subtitle: 'Check table status',
+            onTap: onTables,
+          ),
+          ActionTile(
+            icon: Icons.soup_kitchen,
+            title: 'KOT Management',
+            subtitle: 'Send orders to kitchen',
+            onTap: onBilling,
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget dashboardCard(
-    String title,
-    String value,
-    IconData icon,
-  ) {
+class StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+
+  const StatCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: Colors.deepOrange,
-            ),
-            Text(title),
+            Icon(icon, size: 30),
+            const SizedBox(height: 8),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(title),
           ],
         ),
       ),
@@ -424,274 +540,230 @@ class Dashboard extends StatelessWidget {
   }
 }
 
-class Billing extends StatefulWidget {
-  final void Function(
-    String,
-    String,
-    List<CartLine>,
-  ) onSave;
+class ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
-  final List<String> tables;
-
-  const Billing({
+  const ActionTile({
     super.key,
-    required this.onSave,
-    required this.tables,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
   });
 
   @override
-  State<Billing> createState() => _BillingState();
-}
-
-class _BillingState extends State<Billing> {
-  String category = 'Chicken';
-  String orderType = 'Dine-in';
-  String table = 'T1';
-
-  bool full = false;
-
-  final List<CartLine> cart = [];
-
-  int get total {
-    return cart.fold(
-      0,
-      (sum, item) => sum + item.total,
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Icon(icon),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+        onTap: onTap,
+      ),
     );
   }
+}
+
+/* =========================
+   BILLING
+========================= */
+
+class BillingPage extends StatelessWidget {
+  final List<MenuItemModel> menu;
+  final List<OrderLine> currentOrder;
+  final double orderTotal;
+  final String orderType;
+  final ValueChanged<String> onOrderTypeChanged;
+  final Function(MenuItemModel) onAdd;
+  final Function(int) onRemove;
+  final VoidCallback onSave;
+  final VoidCallback onKOT;
+
+  const BillingPage({
+    super.key,
+    required this.menu,
+    required this.currentOrder,
+    required this.orderTotal,
+    required this.orderType,
+    required this.onOrderTypeChanged,
+    required this.onAdd,
+    required this.onRemove,
+    required this.onSave,
+    required this.onKOT,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final list = items
-        .where((item) => item.category == category)
-        .toList();
-
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: orderType,
-                  decoration: const InputDecoration(
-                    labelText: 'Order Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Dine-in',
-                      child: Text('Dine-in'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Takeaway',
-                      child: Text('Takeaway'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Delivery',
-                      child: Text('Delivery'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => orderType = value);
-                    }
-                  },
-                ),
-              ),
-
-              if (orderType == 'Dine-in') ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: table,
-                    decoration: const InputDecoration(
-                      labelText: 'Table',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: widget.tables
-                        .map(
-                          (tableName) => DropdownMenuItem(
-                            value: tableName,
-                            child: Text(tableName),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => table = value);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        SizedBox(
-          height: 52,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
+          padding: const EdgeInsets.all(12),
+          child: DropdownButtonFormField<String>(
+            initialValue: orderType,
+            decoration: const InputDecoration(
+              labelText: 'Order Type',
+              border: OutlineInputBorder(),
             ),
-            children: [
-              'Chicken',
-              'Mutton',
-              'Fish',
-              'Egg',
-              'Veg',
-              'Roti',
-              'Starter',
-            ].map(
-              (categoryName) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(categoryName),
-                    selected: category == categoryName,
-                    onSelected: (_) {
-                      setState(() {
-                        category = categoryName;
-                      });
-                    },
-                  ),
-                );
-              },
-            ).toList(),
+            items: const [
+              DropdownMenuItem(
+                value: 'Dine-In',
+                child: Text('Dine-In'),
+              ),
+              DropdownMenuItem(
+                value: 'Takeaway',
+                child: Text('Takeaway'),
+              ),
+              DropdownMenuItem(
+                value: 'Delivery',
+                child: Text('Delivery'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                onOrderTypeChanged(value);
+              }
+            },
           ),
         ),
-
-        SwitchListTile(
-          title: Text(
-            full ? 'Full' : 'Half',
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Menu',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          value: full,
-          onChanged: (value) {
-            setState(() => full = value);
-          },
         ),
-
         Expanded(
           child: ListView.builder(
-            itemCount: list.length,
+            padding: const EdgeInsets.all(12),
+            itemCount: menu.length,
             itemBuilder: (context, index) {
-              final item = list[index];
+              final item = menu[index];
 
               return Card(
                 child: ListTile(
-                  title: Text(item.name),
-                  subtitle: Text(
-                    'Half ₹${item.half} • Full ₹${item.full}',
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.add_circle,
-                      color: Colors.deepOrange,
+                  leading: CircleAvatar(
+                    child: Text(
+                      item.name.substring(0, 1),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        final existing = cart.where(
-                          (line) =>
-                              line.item == item &&
-                              line.full == full,
-                        ).toList();
-
-                        if (existing.isEmpty) {
-                          cart.add(
-                            CartLine(
-                              item,
-                              full,
-                              1,
-                            ),
-                          );
-                        } else {
-                          existing.first.qty++;
-                        }
-                      });
-                    },
+                  ),
+                  title: Text(
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(item.category),
+                  trailing: FilledButton(
+                    onPressed: () => onAdd(item),
+                    child: Text('₹${item.price.toStringAsFixed(0)}'),
                   ),
                 ),
               );
             },
           ),
         ),
-
-        if (cart.isNotEmpty)
+        if (currentOrder.isNotEmpty)
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: const [
+                BoxShadow(
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
             child: Column(
               children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Current Order',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: 110,
+                  child: ListView.builder(
+                    itemCount: currentOrder.length,
+                    itemBuilder: (context, index) {
+                      final line = currentOrder[index];
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${line.item.name} x${line.quantity}',
+                            ),
+                          ),
+                          Text(
+                            '₹${line.total.toStringAsFixed(0)}',
+                          ),
+                          IconButton(
+                            onPressed: () => onRemove(index),
+                            icon: const Icon(Icons.remove_circle_outline),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${cart.length} items'),
-                    const Spacer(),
-                    Text(
-                      '₹$total',
-                      style: const TextStyle(
+                    const Text(
+                      'TOTAL',
+                      style: TextStyle(
                         fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₹${orderTotal.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-
-                SizedBox(
-                  height: 48,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: cart.map(
-                      (line) {
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(right: 5),
-                          child: Chip(
-                            label: Text(
-                              '${line.item.name} ×${line.qty}',
-                            ),
-                            onDeleted: () {
-                              setState(() {
-                                cart.remove(line);
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ).toList(),
-                  ),
-                ),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      widget.onSave(
-                        orderType,
-                        orderType == 'Takeaway'
-                            ? 'Takeaway'
-                            : table,
-                        List<CartLine>.from(cart),
-                      );
-
-                      setState(() {
-                        cart.clear();
-                      });
-
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('KOT sent successfully'),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.send),
-                    label: const Text(
-                      'Send KOT & Save',
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onKOT,
+                        icon: const Icon(Icons.soup_kitchen),
+                        label: const Text('SEND KOT'),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: onSave,
+                        icon: const Icon(Icons.check),
+                        label: const Text('SAVE BILL'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -701,38 +773,8 @@ class _BillingState extends State<Billing> {
   }
 }
 
-class Kots extends StatelessWidget {
-  final List<Map<String, dynamic>> orders;
-  final void Function(Map<String, dynamic>) onPaid;
+/* =========================
+   TABLES
+========================= */
 
-  const Kots({
-    super.key,
-    required this.orders,
-    required this.onPaid,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final pending = orders
-        .where((order) => order['paid'] != true)
-        .toList();
-
-    if (pending.isEmpty) {
-      return const Center(
-        child: Text(
-          'कोई pending KOT नहीं है',
-        ),
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: pending.map(
-        (order) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                chi
+cl
