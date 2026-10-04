@@ -15,14 +15,126 @@ class KgnTawaFryApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.deepOrange,
-        scaffoldBackgroundColor: const Color(0xFFFFF8F3),
+        scaffoldBackgroundColor: const Color(0xfffff8f2),
       ),
       home: const LoginPage(),
     );
   }
 }
 
-// ================= LOGIN =================
+/* ===================== MODELS ===================== */
+
+class MenuItem {
+  final String name;
+  final String category;
+  final double price;
+
+  MenuItem(this.name, this.category, this.price);
+}
+
+class OrderItem {
+  final MenuItem item;
+  int qty;
+
+  OrderItem(this.item, this.qty);
+}
+
+class RestaurantOrder {
+  final int table;
+  final String type;
+  final List<OrderItem> items;
+  String status;
+
+  RestaurantOrder({
+    required this.table,
+    required this.type,
+    required this.items,
+    this.status = 'KOT Pending',
+  });
+}
+
+/* ===================== DATA ===================== */
+
+final List<MenuItem> menu = [
+  MenuItem('Murgh Do Pyaza', 'Chicken', 300),
+  MenuItem('Murgh Mughlai', 'Chicken', 320),
+  MenuItem('Chicken Handi', 'Chicken', 300),
+  MenuItem('Chicken Peshawar', 'Chicken', 320),
+  MenuItem('Shahi Chicken', 'Chicken', 320),
+  MenuItem('Malai Tikka', 'Chicken', 350),
+  MenuItem('Tikka Masala', 'Chicken', 320),
+  MenuItem('Karahi', 'Chicken', 300),
+  MenuItem('Garlic Chicken', 'Chicken', 300),
+  MenuItem('Chicken India', 'Chicken', 450),
+  MenuItem('Butter Chicken Boneless', 'Chicken', 320),
+  MenuItem('White Chicken', 'Chicken', 350),
+  MenuItem('Green Chicken', 'Chicken', 350),
+  MenuItem('Chicken Fry', 'Chicken', 220),
+  MenuItem('Chicken Masala', 'Chicken', 220),
+  MenuItem('Biryani', 'Biryani', 120),
+  MenuItem('Tandoori Masala', 'Chicken', 480),
+  MenuItem('Ahmedabad Masala', 'Chicken', 320),
+  MenuItem('Tikka Rice', 'Rice', 320),
+
+  MenuItem('Mughlai Mutton', 'Mutton', 280),
+  MenuItem('Dalbati Gos', 'Mutton', 280),
+  MenuItem('White Mutton', 'Mutton', 300),
+  MenuItem('Green Mutton', 'Mutton', 280),
+  MenuItem('Mutton Kurma', 'Mutton', 300),
+  MenuItem('Mutton Fry', 'Mutton', 220),
+  MenuItem('Mutton Masala', 'Mutton', 220),
+  MenuItem('Kaleji Masala', 'Mutton', 220),
+  MenuItem('Bhaji Gos', 'Mutton', 240),
+  MenuItem('Paya Fry', 'Mutton', 220),
+
+  MenuItem('Chaap Fry', 'Fish', 220),
+  MenuItem('Bheja Fry', 'Fish', 240),
+  MenuItem('Boti Masala', 'Fish', 220),
+  MenuItem('Kheema Fry', 'Fish', 160),
+  MenuItem('Kheema Pulao', 'Rice', 180),
+  MenuItem('Fish Fry', 'Fish', 160),
+  MenuItem('Fish Kadhi', 'Fish', 200),
+  MenuItem('Zinga Fry', 'Fish', 240),
+  MenuItem('Zinga Rice', 'Rice', 320),
+
+  MenuItem('Anda Kadhi', 'Egg', 160),
+  MenuItem('Anda Kheema', 'Egg', 160),
+  MenuItem('Anda Bhurji', 'Egg', 100),
+  MenuItem('Anda Pulao', 'Egg', 120),
+
+  MenuItem('Dal Tadka', 'Veg', 140),
+  MenuItem('Dal Gotala', 'Veg', 160),
+  MenuItem('Butter Dal Fry', 'Veg', 140),
+  MenuItem('Dal Fry', 'Veg', 100),
+  MenuItem('Sabji Fry', 'Veg', 100),
+  MenuItem('Sev Tomato', 'Veg', 100),
+  MenuItem('Masala Rice', 'Rice', 100),
+  MenuItem('Jeera Rice', 'Rice', 100),
+  MenuItem('Kadhi Khichdi', 'Veg', 60),
+  MenuItem('Dal Pulao', 'Rice', 100),
+  MenuItem('Plain Rice', 'Rice', 100),
+
+  MenuItem('Special Roti', 'Roti', 15),
+  MenuItem('Special Paratha', 'Roti', 20),
+  MenuItem('Butter Roti', 'Roti', 15),
+  MenuItem('Chapati Roti', 'Roti', 7),
+  MenuItem('Papad Fry', 'Roti', 10),
+
+  MenuItem('Chicken Tandoori', 'Starter', 350),
+  MenuItem('Chicken Leg Piece', 'Starter', 100),
+  MenuItem('Chicken Lollipop', 'Starter', 50),
+  MenuItem('Chicken Tikka Stick', 'Starter', 10),
+  MenuItem('Chicken Crispy', 'Starter', 20),
+  MenuItem('Chicken Hyderabadi', 'Starter', 20),
+  MenuItem('Chicken Cutlets', 'Starter', 10),
+  MenuItem('Chicken Egg Kabab', 'Starter', 10),
+  MenuItem('Mutton Seekh Kabab', 'Starter', 10),
+  MenuItem('Mutton Boti Kabab', 'Starter', 10),
+  MenuItem('Chicken Dana Small', 'Starter', 50),
+  MenuItem('Chicken Dana Large', 'Starter', 100),
+];
+
+/* ===================== LOGIN ===================== */
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,157 +144,180 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  String user = 'Admin';
+  String role = 'Admin';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('KGN TAWA FRY'),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            const Icon(
-              Icons.restaurant,
-              size: 90,
-              color: Colors.deepOrange,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Smart Restaurant',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Text(
-              'Billing • KOT • Orders • Tables',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 35),
-            DropdownButtonFormField<String>(
-              value: user,
-              decoration: const InputDecoration(
-                labelText: 'Login As',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Admin',
-                  child: Text('Admin / Owner'),
+      backgroundColor: const Color(0xffff5722),
+      body: Center(
+        child: Card(
+          margin: const EdgeInsets.all(25),
+          child: Padding(
+            padding: const EdgeInsets.all(25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.restaurant,
+                  size: 70,
+                  color: Colors.deepOrange,
                 ),
-                DropdownMenuItem(
-                  value: 'Cashier',
-                  child: Text('Cashier'),
+                const SizedBox(height: 15),
+                const Text(
+                  'KGN TAWA FRY',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                DropdownMenuItem(
-                  value: 'Waiter',
-                  child: Text('Waiter'),
+                const Text('Smart Restaurant Billing'),
+                const SizedBox(height: 25),
+
+                DropdownButtonFormField<String>(
+                  value: role,
+                  decoration: const InputDecoration(
+                    labelText: 'Login As',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'Admin',
+                      child: Text('Admin / Owner'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Cashier',
+                      child: Text('Cashier'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Waiter',
+                      child: Text('Waiter'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    setState(() => role = v!);
+                  },
                 ),
-                DropdownMenuItem(
-                  value: 'Kitchen',
-                  child: Text('Kitchen'),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => Dashboard(role: role),
+                        ),
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: Text('LOGIN'),
+                    ),
+                  ),
                 ),
               ],
-              onChanged: (v) {
-                setState(() => user = v!);
-              },
             ),
-            const SizedBox(height: 25),
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => HomePage(user: user),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'OPEN RESTAURANT',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ================= HOME =================
+/* ===================== DASHBOARD ===================== */
 
-class HomePage extends StatefulWidget {
-  final String user;
+class Dashboard extends StatefulWidget {
+  final String role;
 
-  const HomePage({super.key, required this.user});
+  const Dashboard({super.key, required this.role});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Dashboard> createState() => _DashboardState();
 }
 
-class _HomePageState extends State<HomePage> {
-  int index = 0;
+class _DashboardState extends State<Dashboard> {
+  int selected = 0;
 
-  final List<Widget> pages = const [
-    DashboardPage(),
-    TablesPage(),
-    OrdersPage(),
-    KotPage(),
-    MenuPage(),
-    ReportsPage(),
-    MorePage(),
-  ];
+  final List<RestaurantOrder> orders = [];
 
-  final List<String> titles = [
-    'Dashboard',
-    'Tables',
-    'Orders',
-    'Kitchen KOT',
-    'Menu',
-    'Reports',
-    'More',
-  ];
+  final List<double> sales = [];
+
+  double expenses = 0;
+
+  final int tableCount = 20;
+
+  void addOrder(RestaurantOrder order) {
+    setState(() {
+      orders.removeWhere((o) => o.table == order.table);
+      orders.add(order);
+    });
+  }
+
+  double get todaySales {
+    double total = 0;
+
+    for (final order in orders) {
+      for (final item in order.items) {
+        total += item.item.price * item.qty;
+      }
+    }
+
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      TablesPage(
+        orders: orders,
+        onOrderSaved: addOrder,
+        tableCount: tableCount,
+      ),
+      KotPage(orders: orders),
+      BillingPage(orders: orders),
+      MenuPage(),
+      ReportsPage(
+        sales: todaySales,
+        expenses: expenses,
+        orders: orders,
+      ),
+      ExpensePage(
+        onExpenseAdded: (amount) {
+          setState(() {
+            expenses += amount;
+          });
+        },
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('KGN TAWA FRY - ${titles[index]}'),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
+        title: Text(
+          'KGN TAWA FRY - ${widget.role}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
-      body: pages[index],
+      body: pages[selected],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
+        selectedIndex: selected,
         onDestinationSelected: (i) {
-          setState(() => index = i);
+          setState(() => selected = i);
         },
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard),
-            label: 'Home',
-          ),
           NavigationDestination(
             icon: Icon(Icons.table_restaurant),
             label: 'Tables',
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long),
-            label: 'Orders',
+            label: 'KOT',
           ),
           NavigationDestination(
-            icon: Icon(Icons.soup_kitchen),
-            label: 'KOT',
+            icon: Icon(Icons.point_of_sale),
+            label: 'Billing',
           ),
           NavigationDestination(
             icon: Icon(Icons.restaurant_menu),
@@ -193,8 +328,8 @@ class _HomePageState extends State<HomePage> {
             label: 'Reports',
           ),
           NavigationDestination(
-            icon: Icon(Icons.more_horiz),
-            label: 'More',
+            icon: Icon(Icons.money_off),
+            label: 'Expense',
           ),
         ],
       ),
@@ -202,201 +337,81 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ================= DASHBOARD =================
+/* ===================== TABLES ===================== */
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class TablesPage extends StatelessWidget {
+  final List<RestaurantOrder> orders;
+  final Function(RestaurantOrder) onOrderSaved;
+  final int tableCount;
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Today Overview',
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 15),
-        Row(
-          children: [
-            Expanded(
-              child: _card(
-                '₹0',
-                'Today Sales',
-                Icons.currency_rupee,
-                Colors.green,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _card(
-                '0',
-                'Orders',
-                Icons.receipt_long,
-                Colors.blue,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _card(
-                '0',
-                'KOT Pending',
-                Icons.soup_kitchen,
-                Colors.orange,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _card(
-                '0',
-                'Occupied',
-                Icons.table_restaurant,
-                Colors.red,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 25),
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        _action(
-          context,
-          'New Dine-In Order',
-          Icons.table_restaurant,
-        ),
-        _action(
-          context,
-          'New Takeaway',
-          Icons.shopping_bag,
-        ),
-        _action(
-          context,
-          'New Delivery',
-          Icons.delivery_dining,
-        ),
-        _action(
-          context,
-          'Create Bill',
-          Icons.receipt,
-        ),
-        _action(
-          context,
-          'Kitchen KOT',
-          Icons.soup_kitchen,
-        ),
-      ],
-    );
+  const TablesPage({
+    super.key,
+    required this.orders,
+    required this.onOrderSaved,
+    required this.tableCount,
+  });
+
+  RestaurantOrder? getOrder(int table) {
+    for (final order in orders) {
+      if (order.table == table) return order;
+    }
+    return null;
   }
-
-  static Widget _card(
-    String value,
-    String title,
-    IconData icon,
-    Color color,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            Icon(icon, size: 35, color: color),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(title),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _action(
-    BuildContext context,
-    String title,
-    IconData icon,
-  ) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: Colors.deepOrange),
-        title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios),
-        onTap: () {},
-      ),
-    );
-  }
-}
-
-// ================= TABLES =================
-
-class TablesPage extends StatefulWidget {
-  const TablesPage({super.key});
-
-  @override
-  State<TablesPage> createState() => _TablesPageState();
-}
-
-class _TablesPageState extends State<TablesPage> {
-  final List<String> status = List.generate(12, (_) => 'Empty');
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: status.length,
+      padding: const EdgeInsets.all(14),
+      itemCount: tableCount,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
         childAspectRatio: 1.05,
       ),
-      itemBuilder: (_, i) {
-        final occupied = status[i] == 'Occupied';
+      itemBuilder: (_, index) {
+        final table = index + 1;
+        final order = getOrder(table);
+        final occupied = order != null;
 
         return Card(
+          elevation: 3,
           child: InkWell(
-            onTap: () {
-              setState(() {
-                status[i] = occupied ? 'Empty' : 'Occupied';
-              });
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              final result = await Navigator.push<RestaurantOrder>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OrderPage(
+                    table: table,
+                    oldOrder: order,
+                  ),
+                ),
+              );
+
+              if (result != null) {
+                onOrderSaved(result);
+              }
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.table_restaurant,
-                  size: 55,
+                  size: 60,
                   color: occupied ? Colors.red : Colors.green,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Table ${i + 1}',
+                  'Table $table',
                   style: const TextStyle(
-                    fontSize: 21,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  status[i],
+                  occupied ? order.status : 'EMPTY',
                   style: TextStyle(
-                    fontSize: 17,
                     color: occupied ? Colors.red : Colors.green,
                     fontWeight: FontWeight.bold,
                   ),
@@ -410,66 +425,222 @@ class _TablesPageState extends State<TablesPage> {
   }
 }
 
-// ================= ORDERS =================
+/* ===================== ORDER ===================== */
 
-class OrdersPage extends StatelessWidget {
-  const OrdersPage({super.key});
+class OrderPage extends StatefulWidget {
+  final int table;
+  final RestaurantOrder? oldOrder;
+
+  const OrderPage({
+    super.key,
+    required this.table,
+    this.oldOrder,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _orderCard(
-          'Table 1',
-          'Dine-In',
-          'Pending',
-        ),
-        _orderCard(
-          'Takeaway #001',
-          'Takeaway',
-          'Ready',
-        ),
-        _orderCard(
-          'Delivery #002',
-          'Delivery',
-          'Preparing',
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 55,
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text('NEW ORDER'),
-          ),
-        ),
-      ],
+  State<OrderPage> createState() => _OrderPageState();
+}
+
+class _OrderPageState extends State<OrderPage> {
+  String category = 'All';
+  String orderType = 'Dine-in';
+
+  final Map<MenuItem, int> cart = {};
+
+  final categories = [
+    'All',
+    'Chicken',
+    'Mutton',
+    'Fish',
+    'Egg',
+    'Veg',
+    'Rice',
+    'Roti',
+    'Starter',
+    'Biryani',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.oldOrder != null) {
+      orderType = widget.oldOrder!.type;
+
+      for (final x in widget.oldOrder!.items) {
+        cart[x.item] = x.qty;
+      }
+    }
+  }
+
+  double get total {
+    double x = 0;
+
+    cart.forEach((item, qty) {
+      x += item.price * qty;
+    });
+
+    return x;
+  }
+
+  void saveOrder() {
+    if (cart.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add items first')),
+      );
+      return;
+    }
+
+    final items = cart.entries
+        .map((e) => OrderItem(e.key, e.value))
+        .toList();
+
+    Navigator.pop(
+      context,
+      RestaurantOrder(
+        table: widget.table,
+        type: orderType,
+        items: items,
+        status: 'KOT Pending',
+      ),
     );
   }
 
-  Widget _orderCard(
-    String order,
-    String type,
-    String status,
-  ) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(
-          Icons.receipt_long,
-          color: Colors.deepOrange,
-        ),
-        title: Text(
-          order,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+  @override
+  Widget build(BuildContext context) {
+    final filtered = category == 'All'
+        ? menu
+        : menu.where((x) => x.category == category).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Table ${widget.table} Order'),
+      ),
+      body: Column(
+        children: [
+          SizedBox(
+            height: 55,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: categories
+                  .map(
+                    (x) => Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: ChoiceChip(
+                        label: Text(x),
+                        selected: category == x,
+                        onSelected: (_) {
+                          setState(() => category = x);
+                        },
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
-        ),
-        subtitle: Text(type),
-        trailing: Text(
-          status,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButtonFormField<String>(
+              value: orderType,
+              decoration: const InputDecoration(
+                labelText: 'Order Type',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'Dine-in',
+                  child: Text('Dine-in'),
+                ),
+                DropdownMenuItem(
+                  value: 'Takeaway',
+                  child: Text('Takeaway'),
+                ),
+                DropdownMenuItem(
+                  value: 'Delivery',
+                  child: Text('Delivery'),
+                ),
+              ],
+              onChanged: (v) {
+                setState(() => orderType = v!);
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: filtered.length,
+              itemBuilder: (_, index) {
+                final item = filtered[index];
+                final qty = cart[item] ?? 0;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${item.category} • ₹${item.price.toStringAsFixed(0)}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: qty == 0
+                              ? null
+                              : () {
+                                  setState(() {
+                                    if (qty == 1) {
+                                      cart.remove(item);
+                                    } else {
+                                      cart[item] = qty - 1;
+                                    }
+                                  });
+                                },
+                          icon: const Icon(Icons.remove),
+                        ),
+                        Text(
+                          '$qty',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              cart[item] = qty + 1;
+                            });
+                          },
+                          icon: const Icon(Icons.add),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: ElevatedButton.icon(
+            onPressed: saveOrder,
+            icon: const Icon(Icons.send),
+            label: Text(
+              'SEND KOT • ₹${total.toStringAsFixed(0)}',
+            ),
           ),
         ),
       ),
@@ -477,75 +648,78 @@ class OrdersPage extends StatelessWidget {
   }
 }
 
-// ================= KOT =================
+/* ===================== KOT ===================== */
 
-class KotPage extends StatefulWidget {
-  const KotPage({super.key});
+class KotPage extends StatelessWidget {
+  final List<RestaurantOrder> orders;
 
-  @override
-  State<KotPage> createState() => _KotPageState();
-}
-
-class _KotPageState extends State<KotPage> {
-  final List<Map<String, String>> orders = [
-    {
-      'table': 'Table 1',
-      'items': 'Murg Do Pyaza x2, Roti x4',
-      'status': 'New',
-    },
-    {
-      'table': 'Table 3',
-      'items': 'Chicken Fry x1',
-      'status': 'Preparing',
-    },
-  ];
+  const KotPage({super.key, required this.orders});
 
   @override
   Widget build(BuildContext context) {
+    if (orders.isEmpty) {
+      return const Center(
+        child: Text(
+          'No KOT orders',
+          style: TextStyle(fontSize: 20),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: orders.length,
-      itemBuilder: (_, i) {
-        final order = orders[i];
+      itemBuilder: (_, index) {
+        final order = orders[index];
 
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  order['table']!,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+          child: ExpansionTile(
+            leading: const Icon(
+              Icons.soup_kitchen,
+              color: Colors.deepOrange,
+            ),
+            title: Text(
+              'Table ${order.table}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${order.type} • ${order.status}',
+            ),
+            children: [
+              ...order.items.map(
+                (x) => ListTile(
+                  title: Text(x.item.name),
+                  trailing: Text(
+                    'x${x.qty}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  order['items']!,
-                  style: const TextStyle(fontSize: 17),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    Chip(
-                      label: Text(order['status']!),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        child: const Text('ACCEPT KOT'),
+                      ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          orders.removeAt(i);
-                        });
-                      },
-                      child: const Text('DONE'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        child: const Text('READY'),
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -553,226 +727,4 @@ class _KotPageState extends State<KotPage> {
   }
 }
 
-// ================= MENU =================
-
-class MenuPage extends StatelessWidget {
-  const MenuPage({super.key});
-
-  static const List<Map<String, dynamic>> menu = [
-    {
-      'name': 'Murgh Do Pyaza',
-      'category': 'Chicken',
-      'price': 300
-    },
-    {
-      'name': 'Murgh Mughlai',
-      'category': 'Chicken',
-      'price': 320
-    },
-    {
-      'name': 'Chicken Handi',
-      'category': 'Chicken',
-      'price': 300
-    },
-    {
-      'name': 'Chicken Peshawar',
-      'category': 'Chicken',
-      'price': 320
-    },
-    {
-      'name': 'Shahi Chicken',
-      'category': 'Chicken',
-      'price': 320
-    },
-    {
-      'name': 'Malai Tikka',
-      'category': 'Chicken',
-      'price': 350
-    },
-    {
-      'name': 'Tikka Masala',
-      'category': 'Chicken',
-      'price': 320
-    },
-    {
-      'name': 'Karahi',
-      'category': 'Chicken',
-      'price': 300
-    },
-    {
-      'name': 'Garlic Chicken',
-      'category': 'Chicken',
-      'price': 300
-    },
-    {
-      'name': 'Chicken Fry',
-      'category': 'Chicken',
-      'price': 220
-    },
-    {
-      'name': 'Chicken Biryani',
-      'category': 'Biryani',
-      'price': 120
-    },
-    {
-      'name': 'Mutton Fry',
-      'category': 'Mutton',
-      'price': 220
-    },
-    {
-      'name': 'Fish Fry',
-      'category': 'Fish',
-      'price': 160
-    },
-    {
-      'name': 'Zinga Fry',
-      'category': 'Fish',
-      'price': 240
-    },
-    {
-      'name': 'Dal Fry',
-      'category': 'Veg',
-      'price': 100
-    },
-    {
-      'name': 'Jeera Rice',
-      'category': 'Rice',
-      'price': 100
-    },
-    {
-      'name': 'Special Roti',
-      'category': 'Roti',
-      'price': 15
-    },
-    {
-      'name': 'Special Paratha',
-      'category': 'Roti',
-      'price': 20
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: menu.length,
-      itemBuilder: (_, i) {
-        final item = menu[i];
-
-        return Card(
-          child: ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.restaurant),
-            ),
-            title: Text(
-              item['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(item['category']),
-            trailing: Text(
-              '₹${item['price']}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ================= REPORTS =================
-
-class ReportsPage extends StatelessWidget {
-  const ReportsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Business Reports',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 15),
-        _report('Today Sales', '₹0'),
-        _report('Total Orders', '0'),
-        _report('Cash Payment', '₹0'),
-        _report('UPI Payment', '₹0'),
-        _report('Discount', '₹0'),
-        _report('Expenses', '₹0'),
-        _report('Net Sales', '₹0'),
-        const SizedBox(height: 20),
-        const Card(
-          child: ListTile(
-            leading: Icon(Icons.info),
-            title: Text('GST'),
-            subtitle: Text('No GST'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _report(String title, String value) {
-    return Card(
-      child: ListTile(
-        title: Text(title),
-        trailing: Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ================= MORE =================
-
-class MorePage extends StatelessWidget {
-  const MorePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        _item(Icons.inventory, 'Inventory & Stock'),
-        _item(Icons.menu_book, 'Menu Management'),
-        _item(Icons.people, 'Staff & Waiters'),
-        _item(Icons.money_off, 'Expenses'),
-        _item(Icons.print, 'Printer Settings'),
-        _item(Icons.bluetooth, 'Bluetooth Printer'),
-        _item(Icons.wifi, 'Wi-Fi Printer'),
-        _item(Icons.settings, 'Restaurant Settings'),
-        _item(Icons.backup, 'Backup & Restore'),
-        _item(Icons.info, 'About KGN TAWA FRY'),
-      ],
-    );
-  }
-
-  Widget _item(IconData icon, String title) {
-    return Card(
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: Colors.deepOrange,
-        ),
-        title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios),
-        onTap: () {},
-      ),
-    );
-  }
-}
+/* ===================== BILLING =============
