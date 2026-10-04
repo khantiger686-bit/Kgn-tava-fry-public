@@ -13,14 +13,16 @@ class KgnTawaFryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'KGN TAWA FRY',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        scaffoldBackgroundColor: const Color(0xFFFFF8F2),
         useMaterial3: true,
+        colorSchemeSeed: Colors.deepOrange,
+        scaffoldBackgroundColor: const Color(0xFFFFF8F3),
       ),
       home: const LoginPage(),
     );
   }
 }
+
+// ================= LOGIN =================
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,252 +32,169 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  String selectedWaiter = 'Salman';
-
-  final List<String> waiters = [
-    'Salman',
-    'Aslam',
-    'Imran',
-    'Admin',
-  ];
+  String user = 'Admin';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.restaurant,
-                  size: 70,
-                  color: Colors.deepOrange,
+      appBar: AppBar(
+        title: const Text('KGN TAWA FRY'),
+        backgroundColor: Colors.deepOrange,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            const Icon(
+              Icons.restaurant,
+              size: 90,
+              color: Colors.deepOrange,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Smart Restaurant',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Text(
+              'Billing • KOT • Orders • Tables',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 35),
+            DropdownButtonFormField<String>(
+              value: user,
+              decoration: const InputDecoration(
+                labelText: 'Login As',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'Admin',
+                  child: Text('Admin / Owner'),
                 ),
-                const SizedBox(height: 15),
-                const Text(
-                  'KGN TAWA FRY',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange,
-                  ),
+                DropdownMenuItem(
+                  value: 'Cashier',
+                  child: Text('Cashier'),
                 ),
-                const SizedBox(height: 5),
-                const Text(
-                  'PRO NO GST',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                DropdownMenuItem(
+                  value: 'Waiter',
+                  child: Text('Waiter'),
                 ),
-                const SizedBox(height: 35),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Select Waiter',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        ...waiters.map(
-                          (waiter) => RadioListTile<String>(
-                            title: Text(waiter),
-                            value: waiter,
-                            groupValue: selectedWaiter,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedWaiter = value!;
-                              });
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => HomePage(
-                                    waiter: selectedWaiter,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: const Padding(
-                              padding: EdgeInsets.all(14),
-                              child: Text(
-                                'START ORDER',
-                                style: TextStyle(fontSize: 17),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                DropdownMenuItem(
+                  value: 'Kitchen',
+                  child: Text('Kitchen'),
                 ),
               ],
+              onChanged: (v) {
+                setState(() => user = v!);
+              },
             ),
-          ),
+            const SizedBox(height: 25),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HomePage(user: user),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'OPEN RESTAURANT',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  final String waiter;
+// ================= HOME =================
 
-  const HomePage({
-    super.key,
-    required this.waiter,
-  });
+class HomePage extends StatefulWidget {
+  final String user;
+
+  const HomePage({super.key, required this.user});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Map<String, dynamic>> tables = List.generate(
-    12,
-    (index) => {
-      'id': index + 1,
-      'status': 'Empty',
-    },
-  );
+  int index = 0;
 
-  final List<Map<String, dynamic>> history = [];
-
-  final List<Map<String, dynamic>> menu = [
-    {'name': 'Murg Do Pyaza', 'price': 300, 'category': 'Chicken'},
-    {'name': 'Mughlai', 'price': 320, 'category': 'Chicken'},
-    {'name': 'Handi', 'price': 300, 'category': 'Chicken'},
-    {'name': 'Malai Tikka', 'price': 350, 'category': 'Chicken'},
-    {'name': 'Butter Chicken', 'price': 320, 'category': 'Chicken'},
-    {'name': 'Chicken Fry', 'price': 220, 'category': 'Chicken'},
-    {'name': 'Chicken Biryani', 'price': 120, 'category': 'Biryani'},
-    {'name': 'Mutton Fry', 'price': 220, 'category': 'Mutton'},
-    {'name': 'Fish Fry', 'price': 160, 'category': 'Fish'},
-    {'name': 'Dal Fry', 'price': 100, 'category': 'Veg'},
-    {'name': 'Jeera Rice', 'price': 100, 'category': 'Rice'},
-    {'name': 'Roti', 'price': 7, 'category': 'Roti'},
+  final List<Widget> pages = const [
+    DashboardPage(),
+    TablesPage(),
+    OrdersPage(),
+    KotPage(),
+    MenuPage(),
+    ReportsPage(),
+    MorePage(),
   ];
 
-  void openTable(int tableId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OrderPage(
-          tableId: tableId,
-          menu: menu,
-          onOrderComplete: () {
-            setState(() {
-              tables[tableId - 1]['status'] = 'Occupied';
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  void clearTable(int tableId) {
-    setState(() {
-      tables[tableId - 1]['status'] = 'Empty';
-    });
-  }
+  final List<String> titles = [
+    'Dashboard',
+    'Tables',
+    'Orders',
+    'Kitchen KOT',
+    'Menu',
+    'Reports',
+    'More',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('KGN TAWA FRY - ${widget.waiter}'),
+        title: Text('KGN TAWA FRY - ${titles[index]}'),
         backgroundColor: Colors.deepOrange,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(15),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Tables',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      body: pages[index],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (i) {
+          setState(() => index = i);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard),
+            label: 'Home',
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.15,
-              ),
-              itemCount: tables.length,
-              itemBuilder: (context, index) {
-                final table = tables[index];
-                final id = table['id'] as int;
-                final occupied = table['status'] == 'Occupied';
-
-                return Card(
-                  child: InkWell(
-                    onTap: () => openTable(id),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.table_restaurant,
-                            size: 45,
-                            color: occupied
-                                ? Colors.red
-                                : Colors.green,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Table $id',
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            table['status'],
-                            style: TextStyle(
-                              color: occupied
-                                  ? Colors.red
-                                  : Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (occupied)
-                            TextButton(
-                              onPressed: () => clearTable(id),
-                              child: const Text('Clear'),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+          NavigationDestination(
+            icon: Icon(Icons.table_restaurant),
+            label: 'Tables',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.soup_kitchen),
+            label: 'KOT',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Menu',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart),
+            label: 'Reports',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz),
+            label: 'More',
           ),
         ],
       ),
@@ -283,178 +202,576 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class OrderPage extends StatefulWidget {
-  final int tableId;
-  final List<Map<String, dynamic>> menu;
-  final VoidCallback onOrderComplete;
+// ================= DASHBOARD =================
 
-  const OrderPage({
-    super.key,
-    required this.tableId,
-    required this.menu,
-    required this.onOrderComplete,
-  });
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
 
   @override
-  State<OrderPage> createState() => _OrderPageState();
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text(
+          'Today Overview',
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 15),
+        Row(
+          children: [
+            Expanded(
+              child: _card(
+                '₹0',
+                'Today Sales',
+                Icons.currency_rupee,
+                Colors.green,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _card(
+                '0',
+                'Orders',
+                Icons.receipt_long,
+                Colors.blue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _card(
+                '0',
+                'KOT Pending',
+                Icons.soup_kitchen,
+                Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _card(
+                '0',
+                'Occupied',
+                Icons.table_restaurant,
+                Colors.red,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 25),
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _action(
+          context,
+          'New Dine-In Order',
+          Icons.table_restaurant,
+        ),
+        _action(
+          context,
+          'New Takeaway',
+          Icons.shopping_bag,
+        ),
+        _action(
+          context,
+          'New Delivery',
+          Icons.delivery_dining,
+        ),
+        _action(
+          context,
+          'Create Bill',
+          Icons.receipt,
+        ),
+        _action(
+          context,
+          'Kitchen KOT',
+          Icons.soup_kitchen,
+        ),
+      ],
+    );
+  }
+
+  static Widget _card(
+    String value,
+    String title,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Icon(icon, size: 35, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(title),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _action(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, color: Colors.deepOrange),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {},
+      ),
+    );
+  }
 }
 
-class _OrderPageState extends State<OrderPage> {
-  final Map<String, int> cart = {};
+// ================= TABLES =================
 
-  void addItem(String name) {
-    setState(() {
-      cart[name] = (cart[name] ?? 0) + 1;
-    });
-  }
+class TablesPage extends StatefulWidget {
+  const TablesPage({super.key});
 
-  void removeItem(String name) {
-    setState(() {
-      if (!cart.containsKey(name)) return;
+  @override
+  State<TablesPage> createState() => _TablesPageState();
+}
 
-      if (cart[name]! > 1) {
-        cart[name] = cart[name]! - 1;
-      } else {
-        cart.remove(name);
-      }
-    });
-  }
+class _TablesPageState extends State<TablesPage> {
+  final List<String> status = List.generate(12, (_) => 'Empty');
 
-  int get total {
-    int amount = 0;
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: status.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.05,
+      ),
+      itemBuilder: (_, i) {
+        final occupied = status[i] == 'Occupied';
 
-    for (final item in widget.menu) {
-      final name = item['name'] as String;
-      final price = item['price'] as int;
-      final quantity = cart[name] ?? 0;
-      amount += price * quantity;
-    }
-
-    return amount;
-  }
-
-  void placeOrder() {
-    if (cart.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add items first'),
-        ),
-      );
-      return;
-    }
-
-    widget.onOrderComplete();
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Order Saved'),
-        content: Text(
-          'Table ${widget.tableId}\n'
-          'Total: ₹$total',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+        return Card(
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                status[i] = occupied ? 'Empty' : 'Occupied';
+              });
             },
-            child: const Text('OK'),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.table_restaurant,
+                  size: 55,
+                  color: occupied ? Colors.red : Colors.green,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Table ${i + 1}',
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  status[i],
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: occupied ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+}
+
+// ================= ORDERS =================
+
+class OrdersPage extends StatelessWidget {
+  const OrdersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Table ${widget.tableId} Order'),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: widget.menu.length,
-              itemBuilder: (context, index) {
-                final item = widget.menu[index];
-                final name = item['name'] as String;
-                final price = item['price'] as int;
-                final quantity = cart[name] ?? 0;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _orderCard(
+          'Table 1',
+          'Dine-In',
+          'Pending',
+        ),
+        _orderCard(
+          'Takeaway #001',
+          'Takeaway',
+          'Ready',
+        ),
+        _orderCard(
+          'Delivery #002',
+          'Delivery',
+          'Preparing',
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 55,
+          child: ElevatedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.add),
+            label: const Text('NEW ORDER'),
+          ),
+        ),
+      ],
+    );
+  }
 
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${item['category']}  •  ₹$price',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          onPressed: quantity == 0
-                              ? null
-                              : () => removeItem(name),
-                          icon: const Icon(Icons.remove),
-                        ),
-                        Text(
-                          '$quantity',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => addItem(name),
-                          icon: const Icon(Icons.add),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+  Widget _orderCard(
+    String order,
+    String type,
+    String status,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(
+          Icons.receipt_long,
+          color: Colors.deepOrange,
+        ),
+        title: Text(
+          order,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
           ),
-          Container(
+        ),
+        subtitle: Text(type),
+        trailing: Text(
+          status,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= KOT =================
+
+class KotPage extends StatefulWidget {
+  const KotPage({super.key});
+
+  @override
+  State<KotPage> createState() => _KotPageState();
+}
+
+class _KotPageState extends State<KotPage> {
+  final List<Map<String, String>> orders = [
+    {
+      'table': 'Table 1',
+      'items': 'Murg Do Pyaza x2, Roti x4',
+      'status': 'New',
+    },
+    {
+      'table': 'Table 3',
+      'items': 'Chicken Fry x1',
+      'status': 'Preparing',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: orders.length,
+      itemBuilder: (_, i) {
+        final order = orders[i];
+
+        return Card(
+          child: Padding(
             padding: const EdgeInsets.all(15),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 5,
-                  color: Colors.black12,
-                ),
-              ],
-            ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    'Total: ₹$total',
-                    style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  order['table']!,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: placeOrder,
-                  icon: const Icon(Icons.check),
-                  label: const Text('SAVE ORDER'),
+                const SizedBox(height: 8),
+                Text(
+                  order['items']!,
+                  style: const TextStyle(fontSize: 17),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+                  children: [
+                    Chip(
+                      label: Text(order['status']!),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          orders.removeAt(i);
+                        });
+                      },
+                      child: const Text('DONE'),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ],
+        );
+      },
+    );
+  }
+}
+
+// ================= MENU =================
+
+class MenuPage extends StatelessWidget {
+  const MenuPage({super.key});
+
+  static const List<Map<String, dynamic>> menu = [
+    {
+      'name': 'Murgh Do Pyaza',
+      'category': 'Chicken',
+      'price': 300
+    },
+    {
+      'name': 'Murgh Mughlai',
+      'category': 'Chicken',
+      'price': 320
+    },
+    {
+      'name': 'Chicken Handi',
+      'category': 'Chicken',
+      'price': 300
+    },
+    {
+      'name': 'Chicken Peshawar',
+      'category': 'Chicken',
+      'price': 320
+    },
+    {
+      'name': 'Shahi Chicken',
+      'category': 'Chicken',
+      'price': 320
+    },
+    {
+      'name': 'Malai Tikka',
+      'category': 'Chicken',
+      'price': 350
+    },
+    {
+      'name': 'Tikka Masala',
+      'category': 'Chicken',
+      'price': 320
+    },
+    {
+      'name': 'Karahi',
+      'category': 'Chicken',
+      'price': 300
+    },
+    {
+      'name': 'Garlic Chicken',
+      'category': 'Chicken',
+      'price': 300
+    },
+    {
+      'name': 'Chicken Fry',
+      'category': 'Chicken',
+      'price': 220
+    },
+    {
+      'name': 'Chicken Biryani',
+      'category': 'Biryani',
+      'price': 120
+    },
+    {
+      'name': 'Mutton Fry',
+      'category': 'Mutton',
+      'price': 220
+    },
+    {
+      'name': 'Fish Fry',
+      'category': 'Fish',
+      'price': 160
+    },
+    {
+      'name': 'Zinga Fry',
+      'category': 'Fish',
+      'price': 240
+    },
+    {
+      'name': 'Dal Fry',
+      'category': 'Veg',
+      'price': 100
+    },
+    {
+      'name': 'Jeera Rice',
+      'category': 'Rice',
+      'price': 100
+    },
+    {
+      'name': 'Special Roti',
+      'category': 'Roti',
+      'price': 15
+    },
+    {
+      'name': 'Special Paratha',
+      'category': 'Roti',
+      'price': 20
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: menu.length,
+      itemBuilder: (_, i) {
+        final item = menu[i];
+
+        return Card(
+          child: ListTile(
+            leading: const CircleAvatar(
+              child: Icon(Icons.restaurant),
+            ),
+            title: Text(
+              item['name'],
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(item['category']),
+            trailing: Text(
+              '₹${item['price']}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ================= REPORTS =================
+
+class ReportsPage extends StatelessWidget {
+  const ReportsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text(
+          'Business Reports',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 15),
+        _report('Today Sales', '₹0'),
+        _report('Total Orders', '0'),
+        _report('Cash Payment', '₹0'),
+        _report('UPI Payment', '₹0'),
+        _report('Discount', '₹0'),
+        _report('Expenses', '₹0'),
+        _report('Net Sales', '₹0'),
+        const SizedBox(height: 20),
+        const Card(
+          child: ListTile(
+            leading: Icon(Icons.info),
+            title: Text('GST'),
+            subtitle: Text('No GST'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _report(String title, String value) {
+    return Card(
+      child: ListTile(
+        title: Text(title),
+        trailing: Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= MORE =================
+
+class MorePage extends StatelessWidget {
+  const MorePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        _item(Icons.inventory, 'Inventory & Stock'),
+        _item(Icons.menu_book, 'Menu Management'),
+        _item(Icons.people, 'Staff & Waiters'),
+        _item(Icons.money_off, 'Expenses'),
+        _item(Icons.print, 'Printer Settings'),
+        _item(Icons.bluetooth, 'Bluetooth Printer'),
+        _item(Icons.wifi, 'Wi-Fi Printer'),
+        _item(Icons.settings, 'Restaurant Settings'),
+        _item(Icons.backup, 'Backup & Restore'),
+        _item(Icons.info, 'About KGN TAWA FRY'),
+      ],
+    );
+  }
+
+  Widget _item(IconData icon, String title) {
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Colors.deepOrange,
+        ),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {},
       ),
     );
   }
