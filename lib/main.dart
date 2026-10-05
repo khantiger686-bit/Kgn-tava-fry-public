@@ -68,5 +68,3 @@ const menu = <MenuItemModel>[
   MenuItemModel('Anda Kheema', 'Egg', 80, 160),
   MenuItemModel('Anda Bhurji', 'Egg', 50, 100),
   MenuItemModel('Anda Pulao', 'Egg', 60, 120),
-
-  //
