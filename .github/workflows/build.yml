@@ -1,5 +1,4 @@
 name: Build APK
-
 on:
   push:
     branches: [ main ]
@@ -19,7 +18,15 @@ jobs:
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-          
+
+      - name: Fix old android folder
+        run: |
+          cp lib/main.dart /tmp/main.dart
+          rm -rf android
+          flutter create --project-name kgn_tava_fry --platforms=android .
+          cp /tmp/main.dart lib/main.dart
+          echo "Fixed android folder"
+
       - name: Get dependencies
         run: flutter pub get
         
