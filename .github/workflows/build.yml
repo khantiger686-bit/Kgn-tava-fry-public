@@ -1,25 +1,33 @@
-name: kgn_tava_fry_pos
-description: "Production Waiter Ordering, KOT Dispatch & Split Billing POS for KGN Tawa Fry"
-publish_to: 'none'
-version: 1.0.0+1
+name: Build APK
 
-environment:
-  sdk: '>=3.0.0 <4.0.0'
+on:
+  push:
+    branches: [ main ]
 
-dependencies:
-  flutter:
-    sdk: flutter
-  provider: ^6.1.1
-  qr_flutter: ^4.1.0
-  intl: ^0.19.0
-  google_fonts: ^6.1.0
-  esc_pos_printer: ^0.5.2
-  esc_pos_utils: ^1.1.0
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
-
-flutter:
-  uses-material-design: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          
+      - name: Get dependencies
+        run: flutter pub get
+        
+      - name: Build APK
+        run: flutter build apk --release
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
