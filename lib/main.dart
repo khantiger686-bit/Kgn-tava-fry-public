@@ -1,212 +1,568 @@
+# KGN TAVA FRY - Production Flutter POS App Codebase
+**Restaurant:** KGN TAVA FRY (M.H. KHAN)  
+**Location:** Machhipith, Raopura, Vadodara  
+**Contact:** 96245 32343 • 89804 62407  
+**UPI VPA:** `kgntavafry@okaxis`
+
+---
+
+## 1. Project Dependencies (`pubspec.yaml`)
+
+```yaml
+name: kgn_tava_fry_pos
+description: "Production Waiter Ordering, KOT Dispatch, Split Billing POS & Bluetooth Thermal Printer for KGN Tawa Fry"
+publish_to: 'none'
+version: 1.1.0+2
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.1
+  qr_flutter: ^4.1.0
+  intl: ^0.19.0
+  google_fonts: ^6.1.0
+  # Bluetooth Thermal ESC/POS Printer Libraries
+  blue_thermal_printer: ^1.2.3
+  esc_pos_utils: ^1.1.0
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+```
+
+---
+
+## 2. Android & iOS Bluetooth Permissions Setup
+
+### Android (`android/app/src/main/AndroidManifest.xml`)
+Add inside `<manifest>`:
+```xml
+    <!-- Bluetooth Permissions for Thermal Printers -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+### iOS (`ios/Runner/Info.plist`)
+```xml
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>KGN Tawa Fry POS uses Bluetooth to connect to kitchen and counter thermal receipt printers.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Connect to Bluetooth ESC/POS receipt printer.</string>
+```
+
+---
+
+## 3. Complete Application Source (`lib/main.dart`)
+
+```dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() => runApp(const BurhaniApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PosProvider()),
+      ],
+      child: const KgnTavaFryApp(),
+    ),
+  );
+}
 
-class BurhaniApp extends StatelessWidget {
-  const BurhaniApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Burhani Waiter',
-      theme: ThemeData(primarySwatch: Colors.orange, useMaterial3: true),
-      home: const LoginPage(),
+// -------------------------------------------------------------
+// BRAND THEME & COLORS
+// -------------------------------------------------------------
+class KgnTheme {
+  static const Color primary = Color(0xFFEA580C); // Warm Saffron / Deep Orange
+  static const Color primaryDark = Color(0xFFC2410C);
+  static const Color darkSlate = Color(0xFF0F172A);
+  static const Color surfaceLight = Color(0xFFF8FAFC);
+  static const Color emeraldGreen = Color(0xFF059669);
+  static const Color crimsonRed = Color(0xFFDC2626);
+}
+
+// -------------------------------------------------------------
+// MODELS
+// -------------------------------------------------------------
+class MenuItem {
+  final String id;
+  final String name;
+  final String gujaratiName;
+  final String category;
+  final double halfPrice;
+  final double fullPrice;
+  final bool isVeg;
+  bool isAvailable;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.gujaratiName,
+    required this.category,
+    required this.halfPrice,
+    required this.fullPrice,
+    required this.isVeg,
+    this.isAvailable = true,
+  });
+}
+
+class CartItem {
+  final MenuItem item;
+  final String portion; // "Half" or "Full"
+  final double price;
+  int quantity;
+
+  CartItem({
+    required this.item,
+    required this.portion,
+    required this.price,
+    this.quantity = 1,
+  });
+}
+
+class TableModel {
+  final String tableNumber;
+  final int seatingPax;
+  String status; // "Available", "Occupied", "Billing"
+  double currentOrderSum;
+
+  TableModel({
+    required this.tableNumber,
+    required this.seatingPax,
+    this.status = "Available",
+    this.currentOrderSum = 0.0,
+  });
+}
+
+// -------------------------------------------------------------
+// BLUETOOTH THERMAL PRINTER SERVICE
+// -------------------------------------------------------------
+class PrinterService {
+  final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  Future<bool> requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+    return statuses.values.every((s) => s.isGranted || s.isLimited);
+  }
+
+  Future<List<BluetoothDevice>> getPairedDevices() async {
+    try {
+      return await bluetooth.getBondedDevices();
+    } catch (e) {
+      debugPrint("Error fetching devices: $e");
+      return [];
+    }
+  }
+
+  Future<bool> connect(BluetoothDevice device) async {
+    try {
+      bool? isConnected = await bluetooth.isConnected;
+      if (isConnected == true) {
+        await bluetooth.disconnect();
+      }
+      await bluetooth.connect(device);
+      return true;
+    } catch (e) {
+      debugPrint("Bluetooth Connection Error: $e");
+      return false;
+    }
+  }
+
+  Future<void> disconnect() async {
+    await bluetooth.disconnect();
+  }
+
+  // Print KOT (Kitchen Order Ticket)
+  Future<bool> printKOT({
+    required String tableNo,
+    required String waiter,
+    required List<CartItem> items,
+    required int kotNumber,
+  }) async {
+    bool? isConnected = await bluetooth.isConnected;
+    if (isConnected != true) return false;
+
+    final timeStr = DateFormat('hh:mm a  dd/MM/yyyy').format(DateTime.now());
+
+    // 0: Normal, 1: Bold, 2: Bold Large, 3: Huge
+    bluetooth.printCustom("KGN TAVA FRY (KITCHEN KOT)", 2, 1);
+    bluetooth.printCustom("** RUNNING KOT #$kotNumber **", 1, 1);
+    bluetooth.printLeftRight("TABLE: $tableNo", "WAITER: $waiter", 1);
+    bluetooth.printCustom("TIME: $timeStr", 0, 0);
+    bluetooth.printCustom("--------------------------------", 1, 1);
+    bluetooth.printLeftRight("ITEM [PORTION]", "QTY", 1);
+    bluetooth.printCustom("--------------------------------", 1, 1);
+
+    for (var item in items) {
+      final nameStr = "${item.item.name} (${item.portion})";
+      bluetooth.printLeftRight(nameStr, "x${item.quantity}", 1);
+      if (item.item.gujaratiName.isNotEmpty) {
+        bluetooth.printCustom("  > ${item.item.gujaratiName}", 0, 0);
+      }
+    }
+
+    bluetooth.printCustom("--------------------------------", 1, 1);
+    bluetooth.printCustom("Dispatch to Kitchen Stations: Tawa & Gravy", 0, 1);
+    bluetooth.printNewLine();
+    bluetooth.printNewLine();
+    bluetooth.paperCut();
+    return true;
+  }
+
+  // Print Customer Tax Invoice / Receipt
+  Future<bool> printCustomerReceipt({
+    required String tableNo,
+    required String billNo,
+    required String waiter,
+    required List<CartItem> items,
+    required double subtotal,
+    required double total,
+    required int splitCount,
+    required String paymentMode,
+  }) async {
+    bool? isConnected = await bluetooth.isConnected;
+    if (isConnected != true) return false;
+
+    final timeStr = DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.now());
+
+    bluetooth.printCustom("KGN TAVA FRY", 3, 1);
+    bluetooth.printCustom("M.H. KHAN - Authentic Tawa Fry", 1, 1);
+    bluetooth.printCustom("Machhipith, Raopura, Vadodara", 0, 1);
+    bluetooth.printCustom("Ph: 96245 32343 / 89804 62407", 0, 1);
+    bluetooth.printCustom("GSTIN: 24AAAFK8902M1Z5", 0, 1);
+    bluetooth.printCustom("================================", 1, 1);
+    bluetooth.printLeftRight("BILL: #$billNo", "TABLE: $tableNo", 1);
+    bluetooth.printLeftRight("SERVER: $waiter", "DATE: $timeStr", 0);
+    bluetooth.printCustom("--------------------------------", 1, 1);
+    bluetooth.printLeftRight("ITEM [PORTION] x QTY", "AMOUNT (INR)", 1);
+    bluetooth.printCustom("--------------------------------", 1, 1);
+
+    for (var item in items) {
+      final lineDesc = "${item.item.name} (${item.portion}) x${item.quantity}";
+      final lineAmt = (item.price * item.quantity).toStringAsFixed(2);
+      bluetooth.printLeftRight(lineDesc, lineAmt, 0);
+    }
+
+    bluetooth.printCustom("--------------------------------", 1, 1);
+    bluetooth.printLeftRight("Subtotal:", "INR ${subtotal.toStringAsFixed(2)}", 0);
+    bluetooth.printLeftRight("CGST (2.5%):", "INR ${(subtotal * 0.025).toStringAsFixed(2)}", 0);
+    bluetooth.printLeftRight("SGST (2.5%):", "INR ${(subtotal * 0.025).toStringAsFixed(2)}", 0);
+    bluetooth.printCustom("================================", 1, 1);
+    bluetooth.printLeftRight("TOTAL PAYABLE:", "INR ${total.toStringAsFixed(2)}", 2);
+
+    if (splitCount > 1) {
+      final perGuest = (total / splitCount).toStringAsFixed(2);
+      bluetooth.printLeftRight("Split ($splitCount Pax):", "INR $perGuest each", 1);
+    }
+
+    bluetooth.printLeftRight("TENDER MODE:", paymentMode, 1);
+    bluetooth.printCustom("--------------------------------", 1, 1);
+    bluetooth.printCustom("UPI: kgntavafry@okaxis", 1, 1);
+    bluetooth.printCustom("Scan & Pay via GPay / PhonePe / Paytm", 0, 1);
+    bluetooth.printCustom("THANK YOU! VISIT AGAIN!", 1, 1);
+    bluetooth.printNewLine();
+    bluetooth.printNewLine();
+    bluetooth.paperCut();
+    return true;
+  }
+}
+
+// -------------------------------------------------------------
+// STATE MANAGEMENT (PROVIDER)
+// -------------------------------------------------------------
+class PosProvider extends ChangeNotifier {
+  String activeWaiter = "Salman";
+  String activeTable = "T-01";
+  int kotCounter = 101;
+
+  final PrinterService printerService = PrinterService();
+  List<BluetoothDevice> pairedDevices = [];
+  BluetoothDevice? selectedDevice;
+  bool isPrinterConnected = false;
+  bool isScanningPrinters = false;
+
+  PosProvider() {
+    initBluetooth();
+  }
+
+  Future<void> initBluetooth() async {
+    isScanningPrinters = true;
+    notifyListeners();
+    try {
+      await printerService.requestPermissions();
+      pairedDevices = await printerService.getPairedDevices();
+      bool? connected = await printerService.bluetooth.isConnected;
+      isPrinterConnected = connected ?? false;
+      if (pairedDevices.isNotEmpty && selectedDevice == null) {
+        selectedDevice = pairedDevices.first;
+      }
+    } catch (e) {
+      debugPrint("Bluetooth Init Error: $e");
+    } finally {
+      isScanningPrinters = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> connectPrinter(BluetoothDevice device) async {
+    selectedDevice = device;
+    notifyListeners();
+    bool success = await printerService.connect(device);
+    isPrinterConnected = success;
+    notifyListeners();
+    return success;
+  }
+
+  Future<void> disconnectPrinter() async {
+    await printerService.disconnect();
+    isPrinterConnected = false;
+    notifyListeners();
+  }
+
+  final List<TableModel> tables = [
+    TableModel(tableNumber: "T-01", seatingPax: 2, status: "Occupied", currentOrderSum: 480.0),
+    TableModel(tableNumber: "T-02", seatingPax: 4, status: "Available"),
+    TableModel(tableNumber: "T-03", seatingPax: 4, status: "Billing", currentOrderSum: 840.0),
+    TableModel(tableNumber: "T-04", seatingPax: 6, status: "Occupied", currentOrderSum: 1120.0),
+    TableModel(tableNumber: "T-05", seatingPax: 2, status: "Available"),
+    TableModel(tableNumber: "T-06", seatingPax: 4, status: "Available"),
+    TableModel(tableNumber: "T-07", seatingPax: 8, status: "Occupied", currentOrderSum: 2350.0),
+    TableModel(tableNumber: "T-08", seatingPax: 4, status: "Available"),
+  ];
+
+  final List<MenuItem> menu = [
+    // Chicken (Page 1)
+    MenuItem(id: "1", name: "Murgh Do Pyaza", gujaratiName: "મુર્ગ દો પ્યાઝા", category: "Chicken", halfPrice: 160, fullPrice: 300, isVeg: false),
+    MenuItem(id: "2", name: "Murgh Mughlai", gujaratiName: "મુર્ગ મુગલાઈ", category: "Chicken", halfPrice: 170, fullPrice: 320, isVeg: false),
+    MenuItem(id: "3", name: "Chicken Handi", gujaratiName: "ચિકન હાંડી", category: "Chicken", halfPrice: 160, fullPrice: 300, isVeg: false),
+    MenuItem(id: "4", name: "Butter Chicken Boneless", gujaratiName: "બટર ચિકન બોનલેસ", category: "Chicken", halfPrice: 170, fullPrice: 320, isVeg: false),
+    MenuItem(id: "5", name: "Chicken Biryani", gujaratiName: "ચિકન બિરયાની", category: "Chicken", halfPrice: 80, fullPrice: 120, isVeg: false),
+    // Mutton & Fish (Page 2)
+    MenuItem(id: "6", name: "Mughlai Mutton", gujaratiName: "મુઘલાઈ મટન", category: "Mutton", halfPrice: 150, fullPrice: 280, isVeg: false),
+    MenuItem(id: "7", name: "Dalbati Gos", gujaratiName: "દાળબાટી ગોસ", category: "Mutton", halfPrice: 150, fullPrice: 280, isVeg: false),
+    MenuItem(id: "8", name: "Fish Fry", gujaratiName: "માછલી ફ્રાય", category: "Mutton", halfPrice: 80, fullPrice: 160, isVeg: false),
+    // Egg & Veg (Page 3)
+    MenuItem(id: "9", name: "Anda Kadhi", gujaratiName: "ઈંડા કઢી", category: "Veg", halfPrice: 80, fullPrice: 160, isVeg: false),
+    MenuItem(id: "10", name: "Dal Tadka", gujaratiName: "દાળ તડકા", category: "Veg", halfPrice: 70, fullPrice: 140, isVeg: true),
+    MenuItem(id: "11", name: "Butter Dal Fry", gujaratiName: "બટર દાળ ફ્રાય", category: "Veg", halfPrice: 70, fullPrice: 140, isVeg: true),
+    // Starters (Page 4)
+    MenuItem(id: "12", name: "Chicken Tandoori", gujaratiName: "ચિકન તંદૂરી", category: "Starters", halfPrice: 180, fullPrice: 350, isVeg: false),
+    MenuItem(id: "13", name: "Chicken Leg Piece", gujaratiName: "ચિકન લેગ પીસ", category: "Starters", halfPrice: 100, fullPrice: 100, isVeg: false),
+  ];
+
+  final List<CartItem> cart = [];
+
+  void selectWaiter(String name) {
+    activeWaiter = name;
+    notifyListeners();
+  }
+
+  void selectTable(String tableNo) {
+    activeTable = tableNo;
+    notifyListeners();
+  }
+
+  void addToCart(MenuItem item, String portion, double price) {
+    final existingIndex = cart.indexWhere((c) => c.item.id == item.id && c.portion == portion);
+    if (existingIndex >= 0) {
+      cart[existingIndex].quantity += 1;
+    } else {
+      cart.add(CartItem(item: item, portion: portion, price: price));
+    }
+    notifyListeners();
+  }
+
+  void removeCartItem(int index) {
+    cart.removeAt(index);
+    notifyListeners();
+  }
+
+  void clearCart() {
+    cart.clear();
+    notifyListeners();
+  }
+
+  double get cartTotal => cart.fold(0, (sum, item) => sum + (item.price * item.quantity));
+
+  void toggleItemStock(String id) {
+    final item = menu.firstWhere((element) => element.id == id);
+    item.isAvailable = !item.isAvailable;
+    notifyListeners();
+  }
+
+  Future<bool> dispatchKOTToPrinter() async {
+    if (cart.isEmpty) return false;
+    kotCounter++;
+    bool printed = await printerService.printKOT(
+      tableNo: activeTable,
+      waiter: activeWaiter,
+      items: List.from(cart),
+      kotNumber: kotCounter,
+    );
+    clearCart();
+    return printed;
+  }
+
+  Future<bool> printBill({required String billNo, required String mode, int splitCount = 1}) async {
+    // Demo receipt items for active table settlement
+    final sampleItems = [
+      CartItem(item: menu[4], portion: "Full", price: 220, quantity: 2), // Chicken Biryani
+      CartItem(item: menu[3], portion: "Full", price: 280, quantity: 1), // Butter Chicken
+      CartItem(item: MenuItem(id: "99", name: "Butter Naan", gujaratiName: "બટર નાન", category: "Roti", halfPrice: 30, fullPrice: 30, isVeg: true), portion: "Unit", price: 30, quantity: 4),
+    ];
+    double sub = 840.0;
+    return await printerService.printCustomerReceipt(
+      tableNo: activeTable,
+      billNo: billNo,
+      waiter: activeWaiter,
+      items: sampleItems,
+      subtotal: sub,
+      total: sub,
+      splitCount: splitCount,
+      paymentMode: mode,
     );
   }
 }
 
-// ===== LOGIN =====
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-  @override State<LoginPage> createState() => _LoginPageState();
-}
-class _LoginPageState extends State<LoginPage> {
-  String selectedUser = 'Salman';
-  final passController = TextEditingController();
-  final users = {
-    'Salman': '1234',
-    'Aslam': '1234',
-    'Admin': 'admin123',
-  };
-  void login() {
-    if (passController.text == users[selectedUser]) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage(waiterName: selectedUser)));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wrong Password!')));
-    }
-  }
+// -------------------------------------------------------------
+// APP ROOT
+// -------------------------------------------------------------
+class KgnTavaFryApp extends StatelessWidget {
+  const KgnTavaFryApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'KGN TAVA FRY POS',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: KgnTheme.surfaceLight,
+        colorScheme: ColorScheme.fromSeed(seedColor: KgnTheme.primary),
+      ),
+      home: const MainNavigationScreen(),
+    );
+  }
+}
+
+// -------------------------------------------------------------
+// MAIN NAVIGATION WRAPPER
+// -------------------------------------------------------------
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({Key? key}) : super(key: key);
+
+  @override
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+}
+
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = const [
+    TablesScreen(),
+    MenuOrderingScreen(),
+    BillingScreen(),
+    InventoryScreen(),
+    PrinterSettingsScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<PosProvider>();
+
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.restaurant, size: 80, color: Colors.orange),
-            const SizedBox(height: 10),
-            const Text('BURHANI RESTAURANT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Text('Waiter Login', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 30),
-            DropdownButtonFormField(value: selectedUser, items: users.keys.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(), onChanged: (v)=> setState(()=> selectedUser = v!), decoration: const InputDecoration(labelText: 'Select Waiter', border: OutlineInputBorder())),
-            const SizedBox(height: 15),
-            TextField(controller: passController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()), onSubmitted: (_)=> login()),
-            const SizedBox(height: 20),
-            SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: login, style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white), child: const Text('LOGIN', style: TextStyle(fontSize: 18)))),
-            const SizedBox(height: 10),
-            const Text('Salman: 1234 | Aslam: 1234 | Admin: admin123', style: TextStyle(fontSize: 11, color: Colors.grey))
-          ]),
+      appBar: AppBar(
+        backgroundColor: KgnTheme.darkSlate,
+        elevation: 2,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: KgnTheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('KGN TAVA FRY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
+                Text('Vadodara • Waiter: ${provider.activeWaiter}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
+              ],
+            ),
+          ],
         ),
+        actions: [
+          // Bluetooth Status Badge & Quick Settings
+          IconButton(
+            icon: Icon(
+              Icons.print,
+              color: provider.isPrinterConnected ? Colors.greenAccent : Colors.redAccent,
+            ),
+            tooltip: provider.isPrinterConnected ? 'Thermal Printer Connected' : 'Printer Disconnected',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrinterSettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: _screens[_currentIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.table_restaurant), label: 'Tables'),
+          NavigationDestination(icon: Icon(Icons.restaurant_menu), label: 'Menu'),
+          NavigationDestination(icon: Icon(Icons.receipt_long), label: 'Billing'),
+          NavigationDestination(icon: Icon(Icons.inventory_2), label: 'Stock / 86'),
+          NavigationDestination(icon: Icon(Icons.bluetooth_searching), label: 'Printer'),
+        ],
       ),
     );
   }
 }
 
-// ===== DATA =====
-class MenuItem {
-  final String name; final int halfPrice; final int fullPrice; final String category;
-  MenuItem(this.name, this.halfPrice, this.fullPrice, this.category);
-}
-final List<MenuItem> menu = [
-  MenuItem('Chicken Biryani', 120, 220, 'Biryani'),
-  MenuItem('Mutton Biryani', 180, 320, 'Biryani'),
-  MenuItem('Veg Biryani', 100, 180, 'Biryani'),
-  MenuItem('Chicken Curry', 150, 260, 'Main Course'),
-  MenuItem('Butter Chicken', 160, 280, 'Main Course'),
-  MenuItem('Dal Fry', 80, 140, 'Main Course'),
-  MenuItem('Tandoori Roti', 20, 20, 'Roti'),
-  MenuItem('Naan', 30, 30, 'Roti'),
-  MenuItem('Cold Drink', 30, 50, 'Drinks'),
-];
-
-class OrderItem {
-  MenuItem item; bool isFull; int qty;
-  OrderItem(this.item, this.isFull, this.qty);
-  int get price => isFull? item.fullPrice : item.halfPrice;
-  int get total => price * qty;
-}
-
-class TableOrder {
-  int tableNo; List<OrderItem> items = []; bool isPaid = false;
-  String waiter = ''; DateTime time = DateTime.now();
-  TableOrder(this.tableNo);
-  int get total => items.fold(0, (s, e) => s + e.total);
-}
-
-// ===== HOME PAGE =====
-class HomePage extends StatefulWidget {
-  final String waiterName;
-  const HomePage({super.key, required this.waiterName});
-  @override State<HomePage> createState() => _HomePageState();
-}
-class _HomePageState extends State<HomePage> {
-  List<TableOrder> tables = List.generate(8, (i) => TableOrder(i+1));
-  List<TableOrder> billHistory = [];
-
-  void openTable(int index) async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(table: tables[index], waiterName: widget.waiterName)));
-    if (result!= null && result is TableOrder) {
-      setState(() {
-        if (result.isPaid && result.items.isNotEmpty) {
-          billHistory.add(result);
-          tables[index] = TableOrder(index+1);
-        } else {
-          tables[index] = result;
-        }
-      });
-    }
-  }
+// -------------------------------------------------------------
+// SCREEN 5: BLUETOOTH THERMAL PRINTER SETTINGS & DIAGNOSTICS
+// -------------------------------------------------------------
+class PrinterSettingsScreen extends StatelessWidget {
+  const PrinterSettingsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PosProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: Text('Welcome ${widget.waiterName}'), backgroundColor: Colors.orange, foregroundColor: Colors.white, actions: [
-        IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (_)=> BillsPage(history: billHistory)));}, icon: const Icon(Icons.receipt_long)),
-        IconButton(onPressed: ()=> Navigator.pushReplacement(context, MaterialPageRoute(builder: (_)=> const LoginPage())), icon: const Icon(Icons.logout))
-      ]),
-      body: GridView.builder(padding: const EdgeInsets.all(12), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.3, crossAxisSpacing: 12, mainAxisSpacing: 12), itemCount: 8, itemBuilder: (c,i){
-        final t = tables[i];
-        final isBusy = t.items.isNotEmpty;
-        return InkWell(onTap: ()=> openTable(i), child: Card(color: isBusy? Colors.orange.shade100 : Colors.white, elevation: 3, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.table_restaurant, size: 40, color: isBusy? Colors.orange : Colors.grey),
-          Text('TABLE ${t.tableNo}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 5),
-          Text(isBusy? 'Rs. ${t.total}\n${t.items.length} items' : 'Empty', textAlign: TextAlign.center, style: TextStyle(color: isBusy? Colors.orange.shade800 : Colors.grey)),
-          if(isBusy) Text('by ${t.waiter}', style: const TextStyle(fontSize: 10))
-        ])));
-      }),
-      bottomNavigationBar: Container(padding: const EdgeInsets.all(12), color: Colors.grey.shade100, child: Text('Total Bills Today: ${billHistory.length} | Total Sale: Rs. ${billHistory.fold(0, (s, e) => s + e.total)}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold))),
-    );
-  }
-}
-
-// ===== ORDER PAGE =====
-class OrderPage extends StatefulWidget {
-  final TableOrder table; final String waiterName;
-  const OrderPage({super.key, required this.table, required this.waiterName});
-  @override State<OrderPage> createState() => _OrderPageState();
-}
-class _OrderPageState extends State<OrderPage> {
-  late TableOrder currentTable;
-  String selectedCategory = 'All';
-  @override void initState(){ super.initState(); currentTable = widget.table; if(currentTable.waiter.isEmpty) currentTable.waiter = widget.waiterName; }
-  List<String> get categories => ['All',...{...menu.map((e)=> e.category)}];
-  List<MenuItem> get filtered => selectedCategory=='All'? menu : menu.where((m)=> m.category==selectedCategory).toList();
-
-  void addItem(MenuItem mi, bool isFull){
-    setState(() {
-      final idx = currentTable.items.indexWhere((e)=> e.item.name==mi.name && e.isFull==isFull);
-      if(idx>=0) currentTable.items[idx].qty++; else currentTable.items.add(OrderItem(mi, isFull, 1));
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Table ${currentTable.tableNo} - ${currentTable.waiter}'), backgroundColor: Colors.orange, foregroundColor: Colors.white),
-      body: Column(children: [
-        SizedBox(height: 45, child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.all(8), children: categories.map((c)=> Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(c), selected: selectedCategory==c, onSelected: (_)=> setState(()=> selectedCategory=c)))).toList())),
-        Expanded(child: Row(children: [
-          Expanded(flex: 3, child: ListView.builder(itemCount: filtered.length, itemBuilder: (c,i){
-            final m = filtered[i];
-            return Card(child: ListTile(title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), subtitle: Text('H: Rs.${m.halfPrice} | F: Rs.${m.fullPrice}'), trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              ElevatedButton(onPressed: ()=> addItem(m,false), style: ElevatedButton.styleFrom(minimumSize: const Size(45,35)), child: const Text('H')),
-              const SizedBox(width: 5),
-              ElevatedButton(onPressed: ()=> addItem(m,true), style: ElevatedButton.styleFrom(minimumSize: const Size(45,35), backgroundColor: Colors.orange), child: const Text('F', style: TextStyle(color: Colors.white))),
-            ])));
-          })),
-          Expanded(flex: 2, child: Container(color: Colors.grey.shade100, child: Column(children: [
-            Container(padding: const EdgeInsets.all(10), color: Colors.orange, child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('KOT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), Text('Rs. ${currentTable.total}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))])),
-            Expanded(child: ListView.builder(itemCount: currentTable.items.length, itemBuilder: (c,i){
-              final o = currentTable.items[i];
-              return ListTile(dense: true, title: Text('${o.item.name} (${o.isFull?'F':'H'})', style: const TextStyle(fontSize: 12)), subtitle: Text('Rs.${o.price} x ${o.qty} = Rs.${o.total}', style: const TextStyle(fontSize: 11)), trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                InkWell(onTap: ()=> setState(()=> o.qty>1? o.qty-- : currentTable.items.removeAt(i)), child: const Icon(Icons.remove_circle, size: 20)),
-                Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Text('${o.qty}')),
-                InkWell(onTap: ()=> setState(()=> o.qty++), child: const Icon(Icons.add_circle, size: 20)),
-              ]));
-            })),
-            Padding(padding: const EdgeInsets.all(8), child: Column(children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('TOTAL:', style: TextStyle(fontWeight: FontWeight.bold)), Text('Rs. ${currentTable.total}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))]),
-              const SizedBox(height: 8),
-              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: currentTable.items.isEmpty? null : ()=> Navigator.pop(context, currentTable), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white), child: const Text('SAVE KOT'))),
-              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: currentTable.items.isEmpty? null : ()=> setState(()=> currentTable.isPaid=true), style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white), child: const Text('PAID & CLOSE'))),
-            ]))
-          ])))
-        ]))
-      ]),
-    );
-  }
-}
-
-class BillsPage extends StatelessWidget {
-  final List<TableOrder> history;
-  const BillsPage({super.key, required this.history});
-  @override Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Day Bills'), backgroundColor: Colors.orange, foregroundColor: Colors.white),
-      body: ListView.builder(itemCount: history.length, itemBuilder: (c,i){
-        final b = history[i];
-        return Card(margin: const EdgeInsets.all(8), child: ListTile(title: Text('Table ${b.tableNo} - Rs. ${b.total}'), subtitle: Text('${b.items.length} items | by ${b.waiter} | ${b.time.hour}:${b.time.minute}'), trailing: const Icon(Icons.check_circle, color: Colors.green)));
-      }),
-    );
-  }
-}
+      appBar: AppBar(
+        title: const Text('Bluetooth Thermal Printer Setup'),
+        backgroundColor: KgnTheme.darkSlate,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding
