@@ -1,6 +1,20 @@
-flutter create kgn_tava_fry_pos
-cd kgn_tava_fry_pos
-# replace pubspec.yaml, then delete default main.dart and copy in the 5 files
-flutter pub get
-flutter run -d chrome            # fast iteration
-flutter build apk --release      # ship to waiter phones
+name: kgn_tava_fry
+description: KGN Tava Fry POS & Billing App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
