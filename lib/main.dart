@@ -1,568 +1,131 @@
-# KGN TAVA FRY - Production Flutter POS App Codebase
-**Restaurant:** KGN TAVA FRY (M.H. KHAN)  
-**Location:** Machhipith, Raopura, Vadodara  
-**Contact:** 96245 32343 • 89804 62407  
-**UPI VPA:** `kgntavafry@okaxis`
-
----
-
-## 1. Project Dependencies (`pubspec.yaml`)
-
-```yaml
-name: kgn_tava_fry_pos
-description: "Production Waiter Ordering, KOT Dispatch, Split Billing POS & Bluetooth Thermal Printer for KGN Tawa Fry"
-publish_to: 'none'
-version: 1.1.0+2
-
-environment:
-  sdk: '>=3.0.0 <4.0.0'
-
-dependencies:
-  flutter:
-    sdk: flutter
-  provider: ^6.1.1
-  qr_flutter: ^4.1.0
-  intl: ^0.19.0
-  google_fonts: ^6.1.0
-  # Bluetooth Thermal ESC/POS Printer Libraries
-  blue_thermal_printer: ^1.2.3
-  esc_pos_utils: ^1.1.0
-  permission_handler: ^11.3.1
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
-
-flutter:
-  uses-material-design: true
-```
-
----
-
-## 2. Android & iOS Bluetooth Permissions Setup
-
-### Android (`android/app/src/main/AndroidManifest.xml`)
-Add inside `<manifest>`:
-```xml
-    <!-- Bluetooth Permissions for Thermal Printers -->
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-```
-
-### iOS (`ios/Runner/Info.plist`)
-```xml
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>KGN Tawa Fry POS uses Bluetooth to connect to kitchen and counter thermal receipt printers.</string>
-    <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>Connect to Bluetooth ESC/POS receipt printer.</string>
-```
-
----
-
-## 3. Complete Application Source (`lib/main.dart`)
-
-```dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => PosProvider()),
-      ],
-      child: const KgnTavaFryApp(),
-    ),
-  );
+void main() => runApp(const KGNApp());
+class KGNApp extends StatelessWidget {
+  const KGNApp({super.key});
+  @override Widget build(BuildContext context) {
+    return MaterialApp(debugShowCheckedModeBanner: false, theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: const Color(0xFFF6F7FB), colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD95A00))), home: const TablesOverview());
+  }
 }
 
-// -------------------------------------------------------------
-// BRAND THEME & COLORS
-// -------------------------------------------------------------
-class KgnTheme {
-  static const Color primary = Color(0xFFEA580C); // Warm Saffron / Deep Orange
-  static const Color primaryDark = Color(0xFFC2410C);
-  static const Color darkSlate = Color(0xFF0F172A);
-  static const Color surfaceLight = Color(0xFFF8FAFC);
-  static const Color emeraldGreen = Color(0xFF059669);
-  static const Color crimsonRed = Color(0xFFDC2626);
-}
-
-// -------------------------------------------------------------
 // MODELS
-// -------------------------------------------------------------
-class MenuItem {
-  final String id;
-  final String name;
-  final String gujaratiName;
-  final String category;
-  final double halfPrice;
-  final double fullPrice;
-  final bool isVeg;
-  bool isAvailable;
+class Dish { String name; String cat; int half; int full; String station; bool veg; bool active; Dish(this.name,this.cat,this.half,this.full,this.station,{this.veg=false,this.active=true});}
+class OrderLine { Dish dish; bool isFull; int qty; OrderLine(this.dish,this.isFull,this.qty); int get rate => isFull? dish.full : dish.half; int get total => rate*qty; }
+class TableData { int no; String pax; bool occupied; int mins; int amount; String waiter; String status; List<OrderLine> kot; TableData(this.no,this.pax,this.occupied,this.mins,this.amount,this.waiter,this.status,this.kot);}
 
-  MenuItem({
-    required this.id,
-    required this.name,
-    required this.gujaratiName,
-    required this.category,
-    required this.halfPrice,
-    required this.fullPrice,
-    required this.isVeg,
-    this.isAvailable = true,
-  });
+List<Dish> dishes = [
+ Dish('Chicken Biryani','Biryani',120,220,'KOT 1 TANDOOR & RICE', veg:false),
+ Dish('Mutton Biryani','Biryani',180,320,'KOT 1', veg:false),
+ Dish('Veg Biryani','Biryani',100,180,'KOT 1', veg:true),
+ Dish('Chicken Curry','Main Course',150,260,'KOT 2', veg:false),
+ Dish('Butter Chicken','Main Course',160,280,'KOT 2', veg:false),
+ Dish('Dal Fry','Main Course',80,140,'KOT 2', veg:true),
+ Dish('Tandoori Roti','Roti',20,20,'KOT 1', veg:true),
+ Dish('Butter Naan','Roti',30,30,'KOT 1', veg:true),
+ Dish('Cold Drink','Drinks',30,50,'KOT 3', veg:true),
+];
+List<TableData> tables = [
+ TableData(1,'4 Pax',true,24,440,'Salman','Occupied',[OrderLine(dishes[0],true,2)]),
+ TableData(2,'2-4 Pax',false,0,0,'','Vacant',[]),
+ TableData(3,'6 Pax',true,12,820,'Aslam','Occupied',[OrderLine(dishes[1],true,2), OrderLine(dishes[4],true,1)]),
+ TableData(4,'4 Pax',false,0,0,'','Vacant',[]),
+ TableData(5,'2 Pax',true,8,280,'Salman','Occupied',[OrderLine(dishes[3],true,1)]),
+ TableData(6,'4 Pax',false,0,0,'','Vacant',[]),
+ TableData(7,'2 Pax',false,0,0,'','Vacant',[]),
+ TableData(8,'8 Pax',false,0,0,'','Vacant',[]),
+];
+
+// TABLES OVERVIEW - EXACT LIKE PHOTO 6
+class TablesOverview extends StatefulWidget { const TablesOverview({super.key}); @override State<TablesOverview> createState()=> _TablesOverviewState();}
+class _TablesOverviewState extends State<TablesOverview> {
+ int selectedBottom = 0;
+ @override Widget build(BuildContext context) {
+   int busy = tables.where((t)=> t.occupied).length;
+   return Scaffold(
+     backgroundColor: const Color(0xFFF6F7FB),
+     appBar: AppBar(toolbarHeight: 70, backgroundColor: Colors.white, title: Row(children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFD95A00), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.restaurant_menu, color: Colors.white)), const SizedBox(width:10), const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Burhani Restaur...', style: TextStyle(fontSize:13,fontWeight:FontWeight.bold)), Text('TABLES OVERVIEW', style: TextStyle(fontSize:14,fontWeight:FontWeight.w900, color: Color(0xFF7A3B00)))] )]), actions: [Container(padding: const EdgeInsets.symmetric(horizontal:10,vertical:4), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(20)), child: Row(children: [Container(width:8,height:8,decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)), const SizedBox(width:5), const Text('Salman', style: TextStyle(fontSize:12))])), const SizedBox(width:8), const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/100')), const SizedBox(width:8)]),
+     body: SingleChildScrollView(padding: const EdgeInsets.all(12), child: Column(children: [
+       Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: Column(children: [
+         Row(children: [const Icon(Icons.restaurant, size:18), const SizedBox(width:6), const Text('Shift Active • Main Floor', style: TextStyle(fontSize:12, color: Colors.grey)), const Spacer(), Container(padding: const EdgeInsets.symmetric(horizontal:8,vertical:2), decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(12)), child: const Text('• LIVE FLOOR', style: TextStyle(fontSize:10, fontWeight: FontWeight.bold)))]),
+         const SizedBox(height:6), Row(children: [const Text('Welcome, Salman', style: TextStyle(fontSize:20, fontWeight: FontWeight.bold)), const Text(' 👋', style: TextStyle(fontSize:20))]),
+         const SizedBox(height:12),
+         Row(children: [
+           Expanded(child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFFFFF0E8), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange.shade100)), child: Row(children: [const Icon(Icons.table_bar, size:16, color: Color(0xFF7A3B00)), const SizedBox(width:6), Text('$busy Busy', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF7A3B00))), const Spacer(), Text('${(busy/8*100).round()}%', style: const TextStyle(fontWeight: FontWeight.bold))]))),
+           const SizedBox(width:8),
+           Expanded(child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFFF0F4FF), borderRadius: BorderRadius.circular(12)), child: Row(children: [const Icon(Icons.check_circle_outline, size:16), const SizedBox(width:6), Text('${8-busy} Vacant', style: const TextStyle(fontWeight: FontWeight.bold)), const Spacer(), Text('${((8-busy)/8*100).round()}%')])))
+         ])
+       ])),
+       const SizedBox(height:12),
+       Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal:12,vertical:6), decoration: BoxDecoration(color: const Color(0xFF7A3B00), borderRadius: BorderRadius.circular(20)), child: Text('All Tables ${tables.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:12))), const SizedBox(width:8), Text('● Occupied $busy', style: const TextStyle(fontSize:12)), const SizedBox(width:8), Text('● Vacant ${8-busy}', style: const TextStyle(fontSize:12, color: Colors.grey))]),
+       const SizedBox(height:12),
+       GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: 8, gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2, childAspectRatio:0.85, crossAxisSpacing:10, mainAxisSpacing:10), itemBuilder: (c,i){
+         final t = tables[i];
+         return Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: t.occupied? const Color(0xFFD95A00).withOpacity(0.3) : Colors.grey.shade200)), child: Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+           Row(children: [Container(width:32,height:32, alignment: Alignment.center, decoration: BoxDecoration(color: t.occupied? const Color(0xFF7A3B00): const Color(0xFFE3EBFF), borderRadius: BorderRadius.circular(8)), child: Text('${t.no}', style: TextStyle(fontWeight: FontWeight.bold, color: t.occupied? Colors.white: Colors.black))), const SizedBox(width:6), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('T-0${t.no}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize:12)), Text(t.pax, style: const TextStyle(fontSize:11, color: Colors.grey))]), const Spacer(), Container(padding: const EdgeInsets.symmetric(horizontal:6,vertical:2), decoration: BoxDecoration(color: t.occupied? const Color(0xFFFFE5D1): const Color(0xFFF0F4FF), borderRadius: BorderRadius.circular(10)), child: Text(t.occupied? '${t.mins}m ago':'Vacant', style: const TextStyle(fontSize:9, fontWeight: FontWeight.bold)))]),
+           const SizedBox(height:12),
+           if(t.occupied)...[Text('Rs. ${t.amount}', style: const TextStyle(color: Color(0xFFD95A00), fontWeight: FontWeight.bold, fontSize:14)), Text('${t.kot.length} items: ${t.kot.isNotEmpty? t.kot.first.dish.name:''}...', style: const TextStyle(fontSize:11, color: Colors.grey)), Text('by ${t.waiter}', style: const TextStyle(fontSize:11, color: Colors.grey)), const Spacer(), SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: ()=> Navigator.push(context, MaterialPageRoute(builder: (_)=> TableOrderScreen(table: t))), icon: const Icon(Icons.receipt, size:14), label: const Text('View KOT', style: TextStyle(fontSize:12)), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7A3B00), foregroundColor: Colors.white)))]
+           else...[const Spacer(), const Center(child: Icon(Icons.table_restaurant, size:32, color: Colors.grey)), const SizedBox(height:6), const Center(child: Text('Empty Table', style: TextStyle(fontWeight: FontWeight.bold, fontSize:12))), const Center(child: Text('Ready for guests', style: TextStyle(fontSize:10, color: Colors.grey))), const Spacer(), SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: ()=> Navigator.push(context, MaterialPageRoute(builder: (_)=> TableOrderScreen(table: t))), icon: const Icon(Icons.add, size:14), label: const Text('Take Order', style: TextStyle(fontSize:12)), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE3EBFF), foregroundColor: Colors.black)))]
+         ]))));
+       }),
+       const SizedBox(height:12),
+       Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: Row(children: [const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.circle, size:10, color: Colors.green), SizedBox(width:5), Text("Today's Performance", style: TextStyle(fontSize:12, fontWeight: FontWeight.bold))]), SizedBox(height:6), Text('Bills Settled', style: TextStyle(fontSize:11, color: Colors.grey)), Text('14 Bills', style: TextStyle(fontSize:18, fontWeight: FontWeight.bold))]), const Spacer(), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [TextButton(onPressed: ()=> Navigator.push(context, MaterialPageRoute(builder: (_)=> const BillSplitScreen())), child: const Text('View Day Report →', style: TextStyle(fontSize:12, color: Color(0xFF7A3B00)))), const Text('Total Gross Sale', style: TextStyle(fontSize:11, color: Colors.grey)), const Text('Rs. 8,920', style: TextStyle(fontSize:18, fontWeight: FontWeight.bold, color: Color(0xFF7A3B00)))] )]))
+     ])),
+     bottomNavigationBar: BottomNavigationBar(currentIndex: selectedBottom, selectedItemColor: const Color(0xFF7A3B00), onTap: (i){ if(i==1) Navigator.push(context, MaterialPageRoute(builder: (_)=> const MenuManageScreen())); if(i==2) Navigator.push(context, MaterialPageRoute(builder: (_)=> const BillSplitScreen()));}, items: const [BottomNavigationBarItem(icon: Icon(Icons.table_restaurant), label: 'Tables'), BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'KOTs'), BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Bills'), BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Shift')]),
+   );
+ }
 }
 
-class CartItem {
-  final MenuItem item;
-  final String portion; // "Half" or "Full"
-  final double price;
-  int quantity;
-
-  CartItem({
-    required this.item,
-    required this.portion,
-    required this.price,
-    this.quantity = 1,
-  });
+// ORDER ENTRY - LIKE PHOTO 8
+class TableOrderScreen extends StatefulWidget { final TableData table; const TableOrderScreen({super.key, required this.table}); @override State<TableOrderScreen> createState()=> _TableOrderScreenState();}
+class _TableOrderScreenState extends State<TableOrderScreen> {
+ String cat = 'ALL ITEMS'; List<OrderLine> current = [];
+ @override void initState(){ super.initState(); current = List.from(widget.table.kot);}
+ int get total => current.fold(0, (s,e)=> s+e.total);
+ @override Widget build(BuildContext context) {
+   final filtered = cat=='ALL ITEMS'? dishes : dishes.where((d)=> d.cat.toUpperCase()==cat).toList();
+   return Scaffold(
+     appBar: AppBar(backgroundColor: Colors.white, title: Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal:6,vertical:4), decoration: BoxDecoration(color: const Color(0xFF7A3B00), borderRadius: BorderRadius.circular(6)), child: Text('T${widget.table.no}', style: const TextStyle(color: Colors.white, fontSize:12, fontWeight: FontWeight.bold))), const SizedBox(width:8), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Table 0${widget.table.no}', style: const TextStyle(fontSize:14, fontWeight: FontWeight.bold)), Text('Guest: Walk-in • 4 Pax • Serve...', style: const TextStyle(fontSize:10, color: Colors.grey))])]), actions: [Column(children: [const Text('RUNNING TOTAL', style: TextStyle(fontSize:9)), Text('Rs. $total', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD95A00)))]), const SizedBox(width:12)]),
+     body: Column(children: [
+       Padding(padding: const EdgeInsets.all(8), child: TextField(decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: 'Search menu items...', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)), suffixIcon: IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: (){})))),
+       SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal:8), child: Row(children: ['ALL ITEMS','BIRYANI (3)','MAIN COURSE (3)','ROTI & BREAD'].map((c)=> Padding(padding: const EdgeInsets.only(right:6), child: ChoiceChip(label: Text(c, style: const TextStyle(fontSize:11)), selected: cat==c || (c.contains('BIRYANI') && cat=='BIRYANI'), onSelected: (_)=> setState(()=> cat=c.contains('BIRYANI')? 'BIRYANI': c.contains('MAIN')? 'MAIN COURSE': c.contains('ROTI')? 'ROTI': 'ALL ITEMS'), selectedColor: const Color(0xFF7A3B00), labelStyle: TextStyle(color: (cat==c || (c.contains('BIRYANI') && cat=='BIRYANI'))? Colors.white: Colors.black)))).toList())),
+       Expanded(child: ListView.builder(itemCount: filtered.length, itemBuilder: (c,i){
+         final d = filtered[i];
+         return Container(margin: const EdgeInsets.symmetric(horizontal:8,vertical:4), padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Row(children: [
+           Container(width:48,height:48, decoration: BoxDecoration(color: d.veg? Colors.green.shade50: Colors.red.shade50, borderRadius: BorderRadius.circular(8)), child: Icon(d.veg? Icons.eco: Icons.circle, color: d.veg? Colors.green: Colors.red, size:20)),
+           const SizedBox(width:10),
+           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Container(width:8,height:8, decoration: BoxDecoration(color: d.veg? Colors.green: Colors.red, shape: BoxShape.circle)), const SizedBox(width:4), Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize:13), overflow: TextOverflow.ellipsis))]), Text('${d.cat} • H: Rs.${d.half} • F: Rs.${d.full}', style: const TextStyle(fontSize:11, color: Colors.grey))]) ),
+           const SizedBox(width:6),
+           ElevatedButton(onPressed: ()=> setState(()=> current.add(OrderLine(d,false,1))), style: ElevatedButton.styleFrom(minimumSize: const Size(60,32), backgroundColor: Colors.white, side: const BorderSide(color: Colors.grey)), child: Text('H (${d.half})', style: const TextStyle(fontSize:11, color: Colors.black))),
+           const SizedBox(width:4),
+           ElevatedButton(onPressed: ()=> setState(()=> current.add(OrderLine(d,true,1))), style: ElevatedButton.styleFrom(minimumSize: const Size(65,32), backgroundColor: const Color(0xFF7A3B00), foregroundColor: Colors.white), child: Text('+ F (${d.full})', style: const TextStyle(fontSize:11)))
+         ]));
+       })),
+       if(current.isNotEmpty) Container(color: Colors.white, padding: const EdgeInsets.all(10), child: Column(children: [
+         Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal:8,vertical:2), decoration: BoxDecoration(color: const Color(0xFF7A3B00), borderRadius: BorderRadius.circular(4)), child: Text('TABLE ${widget.table.no} KOT', style: const TextStyle(color: Colors.white, fontSize:10))), const SizedBox(width:6), const Text('Active Slip #04', style: TextStyle(fontSize:11)), const Spacer(), const Icon(Icons.circle, color: Colors.green, size:10), const SizedBox(width:4), const Text('Kitchen Ready', style: TextStyle(fontSize:10))]),
+         const SizedBox(height:8),
+        ...current.map((e)=> Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${e.dish.name.substring(0,5)}...', style: const TextStyle(fontWeight: FontWeight.bold, fontSize:12)), Text('Rs. ${e.rate} each', style: const TextStyle(fontSize:10, color: Colors.grey))])), Container(padding: const EdgeInsets.symmetric(horizontal:4), decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)), child: Text(e.isFull? 'Full':'Half', style: const TextStyle(fontSize:9))), IconButton(onPressed: ()=> setState(()=> e.qty>1? e.qty--: current.remove(e)), icon: const Icon(Icons.remove, size:16)), Text('${e.qty}', style: const TextStyle(fontWeight: FontWeight.bold)), IconButton(onPressed: ()=> setState(()=> e.qty++), icon: const Icon(Icons.add, size:16)), SizedBox(width:70, child: Text('Rs. ${e.total}', textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold, fontSize:12))), IconButton(onPressed: ()=> setState(()=> current.remove(e)), icon: const Icon(Icons.delete, size:16, color: Colors.grey))]) ).toList(),
+         const Divider(),
+         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Items Subtotal (3 types)', style: TextStyle(fontSize:11, color: Colors.grey)), Text('Rs. $total', style: const TextStyle(fontSize:11))]),
+         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('GST (5% Inclusive)', style: TextStyle(fontSize:11, color: Colors.grey)), Text('Rs. ${(total*0.05).round()}', style: const TextStyle(fontSize:11))]),
+         const SizedBox(height:4),
+         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Final Bill Amount', style: TextStyle(fontWeight: FontWeight.bold)), Text('Rs. $total', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD95A00)))]),
+       ])),
+       Container(padding: const EdgeInsets.all(8), color: Colors.white, child: Row(children: [
+         Expanded(child: ElevatedButton.icon(onPressed: ()=> Navigator.pop(context), icon: const Icon(Icons.print, size:16), label: const Text('SAVE KOT'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE3EBFF)))),
+         const SizedBox(width:8),
+         Expanded(child: ElevatedButton.icon(onPressed: current.isEmpty? null: ()=> Navigator.push(context, MaterialPageRoute(builder: (_)=> const BillSplitScreen())), icon: const Icon(Icons.check_circle, size:16), label: const Text('PAID & CLOSE'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F5D2F), foregroundColor: Colors.white))),
+         const SizedBox(width:8),
+         Text('Rs. $total', style: const TextStyle(fontWeight: FontWeight.bold))
+       ]))
+     ]),
+   );
+ }
 }
 
-class TableModel {
-  final String tableNumber;
-  final int seatingPax;
-  String status; // "Available", "Occupied", "Billing"
-  double currentOrderSum;
-
-  TableModel({
-    required this.tableNumber,
-    required this.seatingPax,
-    this.status = "Available",
-    this.currentOrderSum = 0.0,
-  });
-}
-
-// -------------------------------------------------------------
-// BLUETOOTH THERMAL PRINTER SERVICE
-// -------------------------------------------------------------
-class PrinterService {
-  final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
-
-  Future<bool> requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-    return statuses.values.every((s) => s.isGranted || s.isLimited);
-  }
-
-  Future<List<BluetoothDevice>> getPairedDevices() async {
-    try {
-      return await bluetooth.getBondedDevices();
-    } catch (e) {
-      debugPrint("Error fetching devices: $e");
-      return [];
-    }
-  }
-
-  Future<bool> connect(BluetoothDevice device) async {
-    try {
-      bool? isConnected = await bluetooth.isConnected;
-      if (isConnected == true) {
-        await bluetooth.disconnect();
-      }
-      await bluetooth.connect(device);
-      return true;
-    } catch (e) {
-      debugPrint("Bluetooth Connection Error: $e");
-      return false;
-    }
-  }
-
-  Future<void> disconnect() async {
-    await bluetooth.disconnect();
-  }
-
-  // Print KOT (Kitchen Order Ticket)
-  Future<bool> printKOT({
-    required String tableNo,
-    required String waiter,
-    required List<CartItem> items,
-    required int kotNumber,
-  }) async {
-    bool? isConnected = await bluetooth.isConnected;
-    if (isConnected != true) return false;
-
-    final timeStr = DateFormat('hh:mm a  dd/MM/yyyy').format(DateTime.now());
-
-    // 0: Normal, 1: Bold, 2: Bold Large, 3: Huge
-    bluetooth.printCustom("KGN TAVA FRY (KITCHEN KOT)", 2, 1);
-    bluetooth.printCustom("** RUNNING KOT #$kotNumber **", 1, 1);
-    bluetooth.printLeftRight("TABLE: $tableNo", "WAITER: $waiter", 1);
-    bluetooth.printCustom("TIME: $timeStr", 0, 0);
-    bluetooth.printCustom("--------------------------------", 1, 1);
-    bluetooth.printLeftRight("ITEM [PORTION]", "QTY", 1);
-    bluetooth.printCustom("--------------------------------", 1, 1);
-
-    for (var item in items) {
-      final nameStr = "${item.item.name} (${item.portion})";
-      bluetooth.printLeftRight(nameStr, "x${item.quantity}", 1);
-      if (item.item.gujaratiName.isNotEmpty) {
-        bluetooth.printCustom("  > ${item.item.gujaratiName}", 0, 0);
-      }
-    }
-
-    bluetooth.printCustom("--------------------------------", 1, 1);
-    bluetooth.printCustom("Dispatch to Kitchen Stations: Tawa & Gravy", 0, 1);
-    bluetooth.printNewLine();
-    bluetooth.printNewLine();
-    bluetooth.paperCut();
-    return true;
-  }
-
-  // Print Customer Tax Invoice / Receipt
-  Future<bool> printCustomerReceipt({
-    required String tableNo,
-    required String billNo,
-    required String waiter,
-    required List<CartItem> items,
-    required double subtotal,
-    required double total,
-    required int splitCount,
-    required String paymentMode,
-  }) async {
-    bool? isConnected = await bluetooth.isConnected;
-    if (isConnected != true) return false;
-
-    final timeStr = DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.now());
-
-    bluetooth.printCustom("KGN TAVA FRY", 3, 1);
-    bluetooth.printCustom("M.H. KHAN - Authentic Tawa Fry", 1, 1);
-    bluetooth.printCustom("Machhipith, Raopura, Vadodara", 0, 1);
-    bluetooth.printCustom("Ph: 96245 32343 / 89804 62407", 0, 1);
-    bluetooth.printCustom("GSTIN: 24AAAFK8902M1Z5", 0, 1);
-    bluetooth.printCustom("================================", 1, 1);
-    bluetooth.printLeftRight("BILL: #$billNo", "TABLE: $tableNo", 1);
-    bluetooth.printLeftRight("SERVER: $waiter", "DATE: $timeStr", 0);
-    bluetooth.printCustom("--------------------------------", 1, 1);
-    bluetooth.printLeftRight("ITEM [PORTION] x QTY", "AMOUNT (INR)", 1);
-    bluetooth.printCustom("--------------------------------", 1, 1);
-
-    for (var item in items) {
-      final lineDesc = "${item.item.name} (${item.portion}) x${item.quantity}";
-      final lineAmt = (item.price * item.quantity).toStringAsFixed(2);
-      bluetooth.printLeftRight(lineDesc, lineAmt, 0);
-    }
-
-    bluetooth.printCustom("--------------------------------", 1, 1);
-    bluetooth.printLeftRight("Subtotal:", "INR ${subtotal.toStringAsFixed(2)}", 0);
-    bluetooth.printLeftRight("CGST (2.5%):", "INR ${(subtotal * 0.025).toStringAsFixed(2)}", 0);
-    bluetooth.printLeftRight("SGST (2.5%):", "INR ${(subtotal * 0.025).toStringAsFixed(2)}", 0);
-    bluetooth.printCustom("================================", 1, 1);
-    bluetooth.printLeftRight("TOTAL PAYABLE:", "INR ${total.toStringAsFixed(2)}", 2);
-
-    if (splitCount > 1) {
-      final perGuest = (total / splitCount).toStringAsFixed(2);
-      bluetooth.printLeftRight("Split ($splitCount Pax):", "INR $perGuest each", 1);
-    }
-
-    bluetooth.printLeftRight("TENDER MODE:", paymentMode, 1);
-    bluetooth.printCustom("--------------------------------", 1, 1);
-    bluetooth.printCustom("UPI: kgntavafry@okaxis", 1, 1);
-    bluetooth.printCustom("Scan & Pay via GPay / PhonePe / Paytm", 0, 1);
-    bluetooth.printCustom("THANK YOU! VISIT AGAIN!", 1, 1);
-    bluetooth.printNewLine();
-    bluetooth.printNewLine();
-    bluetooth.paperCut();
-    return true;
-  }
-}
-
-// -------------------------------------------------------------
-// STATE MANAGEMENT (PROVIDER)
-// -------------------------------------------------------------
-class PosProvider extends ChangeNotifier {
-  String activeWaiter = "Salman";
-  String activeTable = "T-01";
-  int kotCounter = 101;
-
-  final PrinterService printerService = PrinterService();
-  List<BluetoothDevice> pairedDevices = [];
-  BluetoothDevice? selectedDevice;
-  bool isPrinterConnected = false;
-  bool isScanningPrinters = false;
-
-  PosProvider() {
-    initBluetooth();
-  }
-
-  Future<void> initBluetooth() async {
-    isScanningPrinters = true;
-    notifyListeners();
-    try {
-      await printerService.requestPermissions();
-      pairedDevices = await printerService.getPairedDevices();
-      bool? connected = await printerService.bluetooth.isConnected;
-      isPrinterConnected = connected ?? false;
-      if (pairedDevices.isNotEmpty && selectedDevice == null) {
-        selectedDevice = pairedDevices.first;
-      }
-    } catch (e) {
-      debugPrint("Bluetooth Init Error: $e");
-    } finally {
-      isScanningPrinters = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> connectPrinter(BluetoothDevice device) async {
-    selectedDevice = device;
-    notifyListeners();
-    bool success = await printerService.connect(device);
-    isPrinterConnected = success;
-    notifyListeners();
-    return success;
-  }
-
-  Future<void> disconnectPrinter() async {
-    await printerService.disconnect();
-    isPrinterConnected = false;
-    notifyListeners();
-  }
-
-  final List<TableModel> tables = [
-    TableModel(tableNumber: "T-01", seatingPax: 2, status: "Occupied", currentOrderSum: 480.0),
-    TableModel(tableNumber: "T-02", seatingPax: 4, status: "Available"),
-    TableModel(tableNumber: "T-03", seatingPax: 4, status: "Billing", currentOrderSum: 840.0),
-    TableModel(tableNumber: "T-04", seatingPax: 6, status: "Occupied", currentOrderSum: 1120.0),
-    TableModel(tableNumber: "T-05", seatingPax: 2, status: "Available"),
-    TableModel(tableNumber: "T-06", seatingPax: 4, status: "Available"),
-    TableModel(tableNumber: "T-07", seatingPax: 8, status: "Occupied", currentOrderSum: 2350.0),
-    TableModel(tableNumber: "T-08", seatingPax: 4, status: "Available"),
-  ];
-
-  final List<MenuItem> menu = [
-    // Chicken (Page 1)
-    MenuItem(id: "1", name: "Murgh Do Pyaza", gujaratiName: "મુર્ગ દો પ્યાઝા", category: "Chicken", halfPrice: 160, fullPrice: 300, isVeg: false),
-    MenuItem(id: "2", name: "Murgh Mughlai", gujaratiName: "મુર્ગ મુગલાઈ", category: "Chicken", halfPrice: 170, fullPrice: 320, isVeg: false),
-    MenuItem(id: "3", name: "Chicken Handi", gujaratiName: "ચિકન હાંડી", category: "Chicken", halfPrice: 160, fullPrice: 300, isVeg: false),
-    MenuItem(id: "4", name: "Butter Chicken Boneless", gujaratiName: "બટર ચિકન બોનલેસ", category: "Chicken", halfPrice: 170, fullPrice: 320, isVeg: false),
-    MenuItem(id: "5", name: "Chicken Biryani", gujaratiName: "ચિકન બિરયાની", category: "Chicken", halfPrice: 80, fullPrice: 120, isVeg: false),
-    // Mutton & Fish (Page 2)
-    MenuItem(id: "6", name: "Mughlai Mutton", gujaratiName: "મુઘલાઈ મટન", category: "Mutton", halfPrice: 150, fullPrice: 280, isVeg: false),
-    MenuItem(id: "7", name: "Dalbati Gos", gujaratiName: "દાળબાટી ગોસ", category: "Mutton", halfPrice: 150, fullPrice: 280, isVeg: false),
-    MenuItem(id: "8", name: "Fish Fry", gujaratiName: "માછલી ફ્રાય", category: "Mutton", halfPrice: 80, fullPrice: 160, isVeg: false),
-    // Egg & Veg (Page 3)
-    MenuItem(id: "9", name: "Anda Kadhi", gujaratiName: "ઈંડા કઢી", category: "Veg", halfPrice: 80, fullPrice: 160, isVeg: false),
-    MenuItem(id: "10", name: "Dal Tadka", gujaratiName: "દાળ તડકા", category: "Veg", halfPrice: 70, fullPrice: 140, isVeg: true),
-    MenuItem(id: "11", name: "Butter Dal Fry", gujaratiName: "બટર દાળ ફ્રાય", category: "Veg", halfPrice: 70, fullPrice: 140, isVeg: true),
-    // Starters (Page 4)
-    MenuItem(id: "12", name: "Chicken Tandoori", gujaratiName: "ચિકન તંદૂરી", category: "Starters", halfPrice: 180, fullPrice: 350, isVeg: false),
-    MenuItem(id: "13", name: "Chicken Leg Piece", gujaratiName: "ચિકન લેગ પીસ", category: "Starters", halfPrice: 100, fullPrice: 100, isVeg: false),
-  ];
-
-  final List<CartItem> cart = [];
-
-  void selectWaiter(String name) {
-    activeWaiter = name;
-    notifyListeners();
-  }
-
-  void selectTable(String tableNo) {
-    activeTable = tableNo;
-    notifyListeners();
-  }
-
-  void addToCart(MenuItem item, String portion, double price) {
-    final existingIndex = cart.indexWhere((c) => c.item.id == item.id && c.portion == portion);
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity += 1;
-    } else {
-      cart.add(CartItem(item: item, portion: portion, price: price));
-    }
-    notifyListeners();
-  }
-
-  void removeCartItem(int index) {
-    cart.removeAt(index);
-    notifyListeners();
-  }
-
-  void clearCart() {
-    cart.clear();
-    notifyListeners();
-  }
-
-  double get cartTotal => cart.fold(0, (sum, item) => sum + (item.price * item.quantity));
-
-  void toggleItemStock(String id) {
-    final item = menu.firstWhere((element) => element.id == id);
-    item.isAvailable = !item.isAvailable;
-    notifyListeners();
-  }
-
-  Future<bool> dispatchKOTToPrinter() async {
-    if (cart.isEmpty) return false;
-    kotCounter++;
-    bool printed = await printerService.printKOT(
-      tableNo: activeTable,
-      waiter: activeWaiter,
-      items: List.from(cart),
-      kotNumber: kotCounter,
-    );
-    clearCart();
-    return printed;
-  }
-
-  Future<bool> printBill({required String billNo, required String mode, int splitCount = 1}) async {
-    // Demo receipt items for active table settlement
-    final sampleItems = [
-      CartItem(item: menu[4], portion: "Full", price: 220, quantity: 2), // Chicken Biryani
-      CartItem(item: menu[3], portion: "Full", price: 280, quantity: 1), // Butter Chicken
-      CartItem(item: MenuItem(id: "99", name: "Butter Naan", gujaratiName: "બટર નાન", category: "Roti", halfPrice: 30, fullPrice: 30, isVeg: true), portion: "Unit", price: 30, quantity: 4),
-    ];
-    double sub = 840.0;
-    return await printerService.printCustomerReceipt(
-      tableNo: activeTable,
-      billNo: billNo,
-      waiter: activeWaiter,
-      items: sampleItems,
-      subtotal: sub,
-      total: sub,
-      splitCount: splitCount,
-      paymentMode: mode,
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// APP ROOT
-// -------------------------------------------------------------
-class KgnTavaFryApp extends StatelessWidget {
-  const KgnTavaFryApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KGN TAVA FRY POS',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: KgnTheme.surfaceLight,
-        colorScheme: ColorScheme.fromSeed(seedColor: KgnTheme.primary),
-      ),
-      home: const MainNavigationScreen(),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// MAIN NAVIGATION WRAPPER
-// -------------------------------------------------------------
-class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({Key? key}) : super(key: key);
-
-  @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
-}
-
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = const [
-    TablesScreen(),
-    MenuOrderingScreen(),
-    BillingScreen(),
-    InventoryScreen(),
-    PrinterSettingsScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<PosProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: KgnTheme.darkSlate,
-        elevation: 2,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: KgnTheme.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('KGN TAVA FRY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
-                Text('Vadodara • Waiter: ${provider.activeWaiter}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          // Bluetooth Status Badge & Quick Settings
-          IconButton(
-            icon: Icon(
-              Icons.print,
-              color: provider.isPrinterConnected ? Colors.greenAccent : Colors.redAccent,
-            ),
-            tooltip: provider.isPrinterConnected ? 'Thermal Printer Connected' : 'Printer Disconnected',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PrinterSettingsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.table_restaurant), label: 'Tables'),
-          NavigationDestination(icon: Icon(Icons.restaurant_menu), label: 'Menu'),
-          NavigationDestination(icon: Icon(Icons.receipt_long), label: 'Billing'),
-          NavigationDestination(icon: Icon(Icons.inventory_2), label: 'Stock / 86'),
-          NavigationDestination(icon: Icon(Icons.bluetooth_searching), label: 'Printer'),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// SCREEN 5: BLUETOOTH THERMAL PRINTER SETTINGS & DIAGNOSTICS
-// -------------------------------------------------------------
-class PrinterSettingsScreen extends StatelessWidget {
-  const PrinterSettingsScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<PosProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bluetooth Thermal Printer Setup'),
-        backgroundColor: KgnTheme.darkSlate,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding
+// BILL SPLIT - EXACT LIKE PHOTO 1
+class BillSplitScreen extends StatefulWidget { const BillSplitScreen({super.key}); @override State<BillSplitScreen> createState()=> _BillSplitScreenState();}
+class _BillSplitScreenState extends State<BillSplitScreen> {
+ int guests = 4; int collected = 420;
+ @override Widget build(BuildContext context) {
+   return Scaffold(
+     appBar: AppBar(backgroundColor: Colors.white, leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: ()=> Navigator.pop(context)), title: Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal:8,vertical:4), decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(6)), child: const Text('T-03', style: TextStyle(fontWeight: FontWeight.bold))), const SizedBox(width:8), const Column
